@@ -1,0 +1,58 @@
+!***********************************************************************
+! NAVIER STOKES SOLVER - FINITE DIFFERENCES
+!***********************************************************************
+!
+!brief    USER VARIABLE DECLARATIONS FOR THE SOLVER
+!
+!history  Sergio Castiblanco
+!+        13/01/2021
+!+        Translation for original Matlab implementation
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!
+&NSCONF
+
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! PHYSICAL VARIABLES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!  KINEMATIC VISCOSITY (ISU)
+!
+NU = 0.01
+!
+!  WATER DENSITY (ISU)
+!
+RHO = 1000
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! NUMERICAL VARIABLES
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!  NUMBER OF NODES IN DIRECTIONS X AND Y
+!
+NX = 6
+NY = 6
+!
+!  DIMENSIONS OF THE DOMAIN
+!
+XMIN = 0.0D0
+XMAX = 1.0D0
+YMIN = 0.0D0
+YMAX = 1.0D0
+!
+!  TIME DISCRETIZATION
+!
+! INITIAL TIME
+TO = 0.0D0
+! FINAL TIME
+TF = 2.0D0
+!
+! DEBUGGER OPTION (.TRUE. OR .FALSE)
+!
+DEBUG = .TRUE.
+!
+
+/
+
