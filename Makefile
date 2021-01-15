@@ -50,6 +50,7 @@ SRCNUME = $(SRCDIR)/declarations_numerical.f
 SRCPHYS = $(SRCDIR)/declarations_physic.f
 SRCWRHE = $(SRCDIR)/write_headers.f
 SRCPONS = $(SRCDIR)/point_ns.f
+SRCDIFF = $(SRCDIR)/diffusion_matrix.f
 #
 # OBJECT FILES
 #
@@ -58,8 +59,10 @@ OBJNUME = $(OBJDIR)/declarations_numerical.o
 OBJPHYS = $(OBJDIR)/declarations_physic.o
 OBJWRHE = $(OBJDIR)/write_headers.o
 OBJPONS = $(OBJDIR)/point_ns.o
+OBJDIFF = $(OBJDIR)/diffusion_matrix.o
 #
-OBJECTS = $(OBJPHYS) $(OBJNUME) $(OBJWRHE) $(OBJMAIN) $(OBJPONS)
+OBJECTS = $(OBJPHYS) $(OBJNUME) $(OBJWRHE) $(OBJMAIN) $(OBJPONS) /
+    $(OBJDIFF)
 #
 #
 # MODULE FILES
@@ -91,6 +94,9 @@ $(OBJWRHE): $(SRCWRHE)
 
 $(OBJPONS): $(SRCPONS)
 	    $(FC) $(CFLAGS) $(SRCPONS) -o $(OBJPONS)
+
+$(OBJDIFF): $(SRCDIFF)
+	    $(FC) $(CFLAGS) $(SRCDIFF) -o $(OBJDIFF)
 
 $(OBJMAIN): $(MODULES) $(SRCMAIN)
 	    $(FC) $(CFLAGS) $(SRCMAIN) -o $(OBJMAIN)
