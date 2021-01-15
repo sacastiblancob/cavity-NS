@@ -51,6 +51,7 @@ SRCPHYS = $(SRCDIR)/declarations_physic.f
 SRCWRHE = $(SRCDIR)/write_headers.f
 SRCPONS = $(SRCDIR)/point_ns.f
 SRCDIFF = $(SRCDIR)/diffusion_matrix.f
+SRCLAPL = $(SRCDIR)/laplacian_matrix.f
 #
 # OBJECT FILES
 #
@@ -60,9 +61,10 @@ OBJPHYS = $(OBJDIR)/declarations_physic.o
 OBJWRHE = $(OBJDIR)/write_headers.o
 OBJPONS = $(OBJDIR)/point_ns.o
 OBJDIFF = $(OBJDIR)/diffusion_matrix.o
+OBJLAPL = $(OBJDIR)/laplacian_matrix.o
 #
-OBJECTS = $(OBJPHYS) $(OBJNUME) $(OBJWRHE) $(OBJMAIN) $(OBJPONS) /
-    $(OBJDIFF)
+OBJECTS = $(OBJPHYS) $(OBJNUME) $(OBJWRHE) $(OBJMAIN) $(OBJPONS) \
+			   	$(OBJDIFF) $(OBJLAPL)
 #
 #
 # MODULE FILES
@@ -97,6 +99,9 @@ $(OBJPONS): $(SRCPONS)
 
 $(OBJDIFF): $(SRCDIFF)
 	    $(FC) $(CFLAGS) $(SRCDIFF) -o $(OBJDIFF)
+
+$(OBJLAPL): $(SRCLAPL)
+	    $(FC) $(CFLAGS) $(SRCLAPL) -o $(OBJLAPL)
 
 $(OBJMAIN): $(MODULES) $(SRCMAIN)
 	    $(FC) $(CFLAGS) $(SRCMAIN) -o $(OBJMAIN)

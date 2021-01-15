@@ -1,14 +1,13 @@
 !                 ***************************
-                  SUBROUTINE DIFFUSION_MATRIX
+                  SUBROUTINE LAPLACIAN_MATRIX
 !                 ***************************
-     & (DX,DY,DT,NU,BOUND,UPBOUND,DOBOUND,RIBOUND,LEBOUND,BOUNDINT,K,
-     &    SX,SY)
+     & (DX,DY,BOUND,UPBOUND,DOBOUND,RIBOUND,LEBOUND,BOUNDINT,L)
 !
 !***********************************************************************
 ! NAVIER STOKES SOLVER - FINITE DIFFERENCES
 !***********************************************************************
 !
-!brief    1) COMPUTE DIFFUSION COEFFICIENTS AND MATRIX.
+!brief    1) COMPUTE LAPLACIAN MATRIX FOR SOLVE POISSON EQUATION.
 !
 !history  Sergio Castiblanco
 !+        12/01/2021
@@ -16,16 +15,13 @@
 !
 !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !| DX,DY     |-->| SPACE DIFFERENTIALS                                 |
-!| DT        |-->| TIME DIFFERENTIAL                                   |
-!| NU        |-->| KINEMATIC VISCOSITY                                 |
 !| BOUND     |-->| BOUNDARY INDICES                                    |
 !| UPBOUND   |-->| TOP BOUNDARY INDICES                                |
 !| DOBOUND   |-->| BOTTOM BOUNDARY INDICES                             |
 !| RIBOUND   |-->| RIGHT BOUNDARY INDICES                              |
 !| LEBOUND   |-->| LEFT BOUNDARY INDICES                               |
 !| BOUNINT   |-->| INTERNAL BOUNDARY INDICES                           |
-!| K         |<--| DIFFUSION MATRIX                                    |
-!| SX,SY     |<->| DIFF COEFFICIENTS                                   |
+!| L         |<--| LAPLACIAN MATRIX                                    |
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE DECLARATIONS_NUMERICAL, ONLY:NX,NY,DEBUG,LU 
@@ -33,13 +29,12 @@
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-      DOUBLE PRECISION, INTENT(IN)                   :: DX,DY,DT,NU
+      DOUBLE PRECISION, INTENT(IN)                   :: DX,DY
       INTEGER, DIMENSION((2*NX+2*NY)-4), INTENT(IN)  :: BOUND
       INTEGER, DIMENSION(NX), INTENT(IN)             :: UPBOUND, DOBOUND
       INTEGER, DIMENSION(NY-2), INTENT(IN)           :: RIBOUND,LEBOUND
-      DOUBLE PRECISION, INTENT(INOUT)                :: SX,SY
       INTEGER, DIMENSION(2*(NX-2)+2*(NY-4)), INTENT(IN) :: BOUNDINT
-      DOUBLE PRECISION, DIMENSION(NX*NY,NX*NY), INTENT(OUT) :: K
+      DOUBLE PRECISION, DIMENSION(NX*NY,NX*NY), INTENT(OUT) :: L
 !
 ! IN SUBROUTINE VARIABLES
 !
@@ -47,41 +42,34 @@
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-! SETTING DIFFUSSION STABILITY PARAMETERS
-!
-      IF(DEBUG) WRITE(LU,*) 'COMPUTING SX AND SY'
-      SX = ((DT*NU)/(DX**2))
-      SY = ((DT*NU)/(DY**2))
-      IF(DEBUG) WRITE(LU,*) 'END COMPUTING SX AND SY'
-!
-! COMPUTING STTIFFNESS DIFFUSION MATRIX
+! COMPUTING LAPLACIAN OPERATOR MATRIX
 !
       J=1
       DO I=1,NX*NY
-        K(I,J) = -(1 + 30*SX/12 + 30*SY/12)
+        L(I,J) = -30*(1/(12*DX**2) + 1/(12*DY**2))
         IF (J.LT.NX*NY) THEN
-          K(I,J+1) = (16*SY/12)
+          L(I,J+1) = (16/(12*DY**2))
         ENDIF
         IF (J.GT.1)THEN
-          K(I,J-1) = (16*SY/12)
+          L(I,J-1) = (16/(12*DY**2))
         ENDIF
         IF (J.GT.2) THEN
-          K(I,J-2) = -(SY/12)
+          L(I,J-2) = -(1/(12*DY**2))
         ENDIF
         IF (J.LT.(NX*NY-1)) THEN
-          K(I,J+2) = -(SY/12)
+          L(I,J+2) = -(1/(12*DY**2))
         ENDIF
         IF (J.GT.NY) THEN
-          K(I,J-NY) = (16*SX/12)
+          L(I,J-NY) = (16/(12*DX**2))
         ENDIF
         IF (J.LT.(NX*NY-NY+1)) THEN
-          K(I,J+NY) = (16*SX/12)
+          L(I,J+NY) = (16/(12*DX**2))
         ENDIF
         IF (J.GT.2*NY) THEN
-          K(I,J-2*NY) = -(SX/12)
+          L(I,J-2*NY) = -(1/(12*DX**2))
         ENDIF
         IF (J.LT.(NX*NY-2*NY+1)) THEN
-          K(I,J+2*NY) = -(SX/12)
+          L(I,J+2*NY) = -(1/(12*DX**2))
         ENDIF
         J=J+1
       ENDDO
@@ -89,19 +77,19 @@
 ! ZEROING BOUNDARIES
 !
       IF(DEBUG) WRITE(LU,*) 'ZEROING BOUNDARIES'
-      K(BOUND,:) = 0.0D0
-      K(BOUNDINT,:) = 0.0D0
+      L(BOUND,:) = 0.0D0
+      L(BOUNDINT,:) = 0.0D0
 !
 ! CHANGING VALUES FOR BOUNDINT
 !
       IF(DEBUG) WRITE(LU,*) 'CHANGING VALUES FOR BOUNDINT'
       DO I = 1,SIZE(BOUNDINT)
         J = BOUNDINT(I)
-        K(J,J) = -(1 + 2*SX + 2*SY)
-        K(J,J-NY) = SX
-        K(J,J+NY) = SX
-        K(J,J-1) = SY
-        K(J,J+1) = SY
+        L(J,J) = -(2/(DX**2) + 2/(DY**2))
+        L(J,J-NY) = 1/(DX**2)
+        L(J,J+NY) = 1/(DX**2)
+        L(J,J-1) = 1/(DY**2)
+        L(J,J+1) = 1/(DY**2)
       ENDDO
 !
 ! CHANGING VALUES FOR THE BOUNDARIES
@@ -109,27 +97,28 @@
       IF(DEBUG) WRITE(LU,*) 'CHANGING VALUES FOR BOUNDARIES'
       DO I = 1,SIZE(UPBOUND)
         J = UPBOUND(I)
-        K(J,J) = 1.0D0
+        L(J,J) = 3D0/(2*DY)
+        L(J,J+1) = -4/(2*DY)
+        L(J,J+2) = 1/(2*DY)
       ENDDO
       DO I = 1,SIZE(DOBOUND)
         J = DOBOUND(I)
-        K(J,J) = 1.0D0
+        L(J,J) = -3/(2*DY)
+        L(J,J-1) = 4/(2*DY)
+        L(J,J-2) = -1/(2*DY)
       ENDDO
       DO I = 1,SIZE(LEBOUND)
         J = LEBOUND(I)
-        K(J,J) = 1.0D0
+        L(J,J) = -3/(2*DX)
+        L(J,J+NY) = 4/(2*DX)
+        L(J,J+2*NY) = -1/(2*DX)
       ENDDO
       DO I = 1,SIZE(RIBOUND)
         J = RIBOUND(I)
-        K(J,J) = 1.0D0
+        L(J,J) = 3/(2*DX)
+        L(J,J-NY) = -4/(2*DX)
+        L(J,J-2*NY) = 1/(2*DX)
       ENDDO
 !
-! DISPLAYING COMPUTED SX AND SY
-!
-      WRITE(LU,*) REPEAT('~',72)
-      WRITE(LU,*) 'SX VALUE: ', SX
-      WRITE(LU,*) 'SY VALUE: ', SY
-      WRITE(LU,*) REPEAT('~',72)
-!
-      END SUBROUTINE DIFFUSION_MATRIX
+      END SUBROUTINE LAPLACIAN_MATRIX
  

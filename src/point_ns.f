@@ -11,7 +11,7 @@
 !    
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! IN SUBROUTINE VARIABLES
-      INTEGER :: I
+      INTEGER :: I,J,M
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
@@ -28,6 +28,8 @@
       IF(DEBUG) WRITE(LU,*) 'ALLOCATING BOUNDARY POSITIONAL VECTORS'
       ALLOCATE(POS(NX*NY))
       POS = 1
+      ALLOCATE(MPOS(NY,NX))
+      MPOS = 1
       ALLOCATE(BOUND((2*NX + 2*NY)-4))
       BOUND = 1
       ALLOCATE(UPBOUND(NX))
@@ -86,34 +88,35 @@
       DO I=1,NX*NY
         POS(I) = I
       ENDDO
+      M=1
+      DO J=1,NX
+        DO I=1,NY
+          MPOS(I,J) = POS(M)
+          M = M+1
+        ENDDO
+      ENDDO
 !
 ! BOUNDARIES INDEXING
 !
       IF(DEBUG) WRITE(LU,*) 'COMPUTING BOUNDARIES INDEXING'
 !     UP BOUNDARY
-      UPBOUND = POS(1:NX)
+      UPBOUND = MPOS(1,:)
 !
 !     BOTTOM BOUNDARY
-      DOBOUND = POS((NX*NY - NX + 1):NX*NY)
+      DOBOUND = MPOS(NY,:)
 !
 !     RIGHT BOUNDARY
-      RIBOUND(1) = 2*NX
-      DO I=2,(NY-2)
-        RIBOUND(I) = RIBOUND(I-1) + NX
-      ENDDO
+      RIBOUND = MPOS(2:NY-1,NX)
 !
 !     LEFT BOUNDARY
-      LEBOUND(1) = NX+1
-      DO I=2,(NY-2)
-        LEBOUND(I) = LEBOUND(I-1) + NX
-      ENDDO
+      LEBOUND = MPOS(2:NY-1,1)
 !
 !     ALL BOUNDARIES TOGETHER
       BOUND = [UPBOUND,DOBOUND,RIBOUND,LEBOUND]
 !
 !     INTERNAL BOUNDARY
-      BOUNDINT = [POS(NX+2:2*NX-1), POS(NX*NY-2*NX+2:NX*NY-NX-1),
-     &    RIBOUND(2:NY-3) - 1, LEBOUND(2:NY-3) + 1]
+      BOUNDINT = [MPOS(2,2:NX-1),MPOS(NY-1,2:NX-1),
+     &    MPOS(3:NY-2,NX-1), MPOS(3:NY-2,2)]
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! END GRID - END GRID - END GRID
