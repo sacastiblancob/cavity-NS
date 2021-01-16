@@ -10,8 +10,8 @@ dens = 1000;         %Density of water, kg/m3
 
 %%
 %Spatial parameters
-n = 6;                     %Number of nodes in X direction
-m = 6;                     %Number of nodes in Y direction
+n = 201;                     %Number of nodes in X direction
+m = 201;                     %Number of nodes in Y direction
 % n = num;
 % m = num;
 a = 0;                     %Left and down boundary conditions
@@ -173,6 +173,15 @@ end
 % Autovecor asociado al autovalor = 0
 [vecprop0,valprop0] = svds(L,1,'smallest');
 
+% LF = zeros(n*m,n*m);
+% for i=1:n*m
+%     LF(i,:) = L(i,:);
+% end
+
+LF = L*L';
+
+H = elgauss_sing(LF,zeros(n*m,1));
+
 %%
 %Temporal loop
 cont = 1;
@@ -218,7 +227,7 @@ for k=t
     %%% Solucionando la ecuacion de Poisson %%%
     % Presión vector
     P = L\vecbr;
-    
+        
     % Presión matriz
     MP = reshape(P,n,m);
     

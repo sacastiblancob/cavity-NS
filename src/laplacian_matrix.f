@@ -1,7 +1,7 @@
 !                 ***************************
                   SUBROUTINE LAPLACIAN_MATRIX
 !                 ***************************
-     & (DX,DY,BOUND,UPBOUND,DOBOUND,RIBOUND,LEBOUND,BOUNDINT,L)
+     & (DX,DY,BOUND,UPBOUND,DOBOUND,RIBOUND,LEBOUND,BOUNDINT,L,EVECO)
 !
 !***********************************************************************
 ! NAVIER STOKES SOLVER - FINITE DIFFERENCES
@@ -22,6 +22,7 @@
 !| LEBOUND   |-->| LEFT BOUNDARY INDICES                               |
 !| BOUNINT   |-->| INTERNAL BOUNDARY INDICES                           |
 !| L         |<--| LAPLACIAN MATRIX                                    |
+!| EVECO     |<--| SMALLEST RELATED EIGENVECTOR                        |
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE DECLARATIONS_NUMERICAL, ONLY:NX,NY,DEBUG,LU 
@@ -35,10 +36,13 @@
       INTEGER, DIMENSION(NY-2), INTENT(IN)           :: RIBOUND,LEBOUND
       INTEGER, DIMENSION(2*(NX-2)+2*(NY-4)), INTENT(IN) :: BOUNDINT
       DOUBLE PRECISION, DIMENSION(NX*NY,NX*NY), INTENT(OUT) :: L
+      DOUBLE PRECISION, DIMENSION(NX*NY), INTENT(INOUT) :: EVECO
 !
 ! IN SUBROUTINE VARIABLES
 !
       INTEGER :: I,J
+! B FOR INVERSE POWER METHOD ITERATION
+      DOUBLE PRECISION, DIMENSION(NX*NY) :: B
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
@@ -119,6 +123,17 @@
         L(J,J-NY) = -4/(2*DX)
         L(J,J-2*NY) = 1/(2*DX)
       ENDDO
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+! COMPUTING SINGULAR VECTOR RELATED WITH THE SMALLEST SINGULAR VALUE
+!
+      B = 0D0
+      IF(DEBUG) WRITE(LU,*) 'GOING INTO GAUSSIAN ELIMINATION'
+      CALL GAUSS_2(L,B,EVECO,NX*NY)
+      WRITE(*,*) 'EVECO ',EVECO
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       END SUBROUTINE LAPLACIAN_MATRIX
  

@@ -52,6 +52,9 @@ SRCWRHE = $(SRCDIR)/write_headers.f
 SRCPONS = $(SRCDIR)/point_ns.f
 SRCDIFF = $(SRCDIR)/diffusion_matrix.f
 SRCLAPL = $(SRCDIR)/laplacian_matrix.f
+SRCLHGM = $(SRCDIR)/lhs_gmres.f
+SRCGMRS = $(SRCDIR)/solve_gmres.f
+SRCGAUS = $(SRCDIR)/gauss_2.f90
 #
 # OBJECT FILES
 #
@@ -62,9 +65,12 @@ OBJWRHE = $(OBJDIR)/write_headers.o
 OBJPONS = $(OBJDIR)/point_ns.o
 OBJDIFF = $(OBJDIR)/diffusion_matrix.o
 OBJLAPL = $(OBJDIR)/laplacian_matrix.o
+OBJLHGM = $(OBJDIR)/lhs_gmres.o
+OBJGMRS = $(OBJDIR)/solve_gmres.o
+OBJGAUS = $(OBJDIR)/gauss_2.o
 #
-OBJECTS = $(OBJPHYS) $(OBJNUME) $(OBJWRHE) $(OBJMAIN) $(OBJPONS) \
-			   	$(OBJDIFF) $(OBJLAPL)
+OBJECTS = $(OBJPHYS) $(OBJNUME) $(OBJWRHE) $(OBJPONS) $(OBJDIFF) \
+			   	$(OBJLHGM) $(OBJGMRS) $(OBJGAUS) $(OBJLAPL) $(OBJMAIN)
 #
 #
 # MODULE FILES
@@ -99,6 +105,15 @@ $(OBJPONS): $(SRCPONS)
 
 $(OBJDIFF): $(SRCDIFF)
 	    $(FC) $(CFLAGS) $(SRCDIFF) -o $(OBJDIFF)
+
+$(OBJLHGM): $(SRCLHGM)
+	    $(FC) $(CFLAGS) $(SRCLHGM) -o $(OBJLHGM)
+
+$(OBJGMRS): $(SRCGMRS)
+	    $(FC) $(CFLAGS) $(SRCGMRS) -o $(OBJGMRS)
+
+$(OBJGAUS): $(SRCGAUS)
+	    $(FC) $(CFLAGS) $(SRCGAUS) -o $(OBJGAUS)
 
 $(OBJLAPL): $(SRCLAPL)
 	    $(FC) $(CFLAGS) $(SRCLAPL) -o $(OBJLAPL)
