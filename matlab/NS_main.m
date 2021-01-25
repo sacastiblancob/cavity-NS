@@ -4,12 +4,14 @@ clear; clc;
 %terms.
 
 %%
-%Entry constant values
-nu = 0.0001;          %Kinematic viscosity 0.02 >= nu >= 0.0003
-rho = 1000;         %Density of water, kg/m3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Physical paramters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+nu = 0.0001;          %Kinematic viscosity (ISU)
+rho = 1000;         %Density of water, kg/m3 (ISU)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Space parameters
+% Space parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Number of nodes in each direction
@@ -21,6 +23,63 @@ xmin = 0.0;       %Left boundary
 ymin = 0.0;       %Bottom boundary
 xmax = 1.0;       %Top boundary
 ymax = 1.0;       %Right boundary
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Time parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Courant Number
+CFL = 1;                                    %CFL (nonlinear parameter)
+
+% Initial time
+to = 0;                                     %Initial time
+
+% Final time
+tf = 2;                                  %Final time
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Solver Parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% CG configuration
+%
+
+%Tolerance for the residual of Conjugate Gradient Method
+tolcg = 1E-8;
+
+%Maximum number of iterations for CG solver (in difussion step)
+mniterd = 100;
+
+%
+% Options for 'smallest' SVD solution
+%
+
+% Tolerance for finding minimum singular vector related
+tolsing = 1E-12;
+
+%Number of iterations for inverse power method
+sing = 1;
+
+% Maximum number of iterations for the solver, to find minimum singular
+% vector related
+mniterm = 1000;
+
+%
+% SOR Solver configuration for the laplacian
+%
+
+% Over-Relaxation coefficient (w=1 for Gauss-Seidel)
+w = 13.4523570058092 * exp(-0.206450260650164 * (n*m).^-0.434163866503769) - 11.4497834449085;
+
+%Tolerance for the residual of SOR
+tolsor = 1E-4;
+
+%Maximum number of iterations for SOR solver (in Poisson step)
+mniters = 1000;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Computing Space Parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Space differentials
 dx = (xmax-xmin)/(n-1);           %X diferential
@@ -38,9 +97,10 @@ Mpos(m,:) = 1:n;
 for i=m-1:-1:1
     Mpos(i,:) = Mpos(i+1,:) + n;
 end
-Mpos2 = reshape(pos,n,m);
-Mpos2 = Mpos2';
-Mpos2 = Mpos2(m:-1:1,:);
+
+if tolsor > (min(dx,dy)*min(dx,dy))/2
+    tolsor = (min(dx,dy)*min(dx,dy))/2;
+end
 
 %Boundary nodes
 bound = [1:n,n+1:n:n*m-2*n+1,2*n:n:n*m-n,n*m-n+1:n*m];
@@ -56,41 +116,18 @@ riboundin = (3*n-1:n:n*m-2*n-1);
 boundint = [Mpos(2,2:n-1), Mpos(m-1,2:n-1), Mpos(3:m-2,2)',Mpos(3:m-2,n-1)'];
 boundint = sort(boundint);
 
-%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Initial condition for velocity
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Uo = zeros(m*n,1);
 Uo(upbound) = 1.0;
 Uo(n*m) = 1.0;
 Uo(n*m-n+1) = 1.0;
 Vo = zeros(m*n,1);
 
-% % % Plotting initial condition
-% % Uplot = reshape(Uo,n,m);
-% % Uplot = Uplot';
-% % Uplot = Uplot(m:-1:1,:);
-% % Vplot = reshape(Vo,n,m);
-% % Vplot = Vplot';
-% % Vplot = Vplot(m:-1:1,:);
-% % 
-% % % Plotting U velocity
-% % subplot(1,2,1)
-% % surf(X,Y,Uplot); 
-% % axis([xmin xmax ymin ymax -1 1]);
-% % view(0,90);
-% % drawnow
-% % 
-% % % Plotting V velocity
-% % subplot(1,2,2)
-% % surf(X,Y,Vplot); 
-% % axis([xmin xmax ymin ymax -1 1]);
-% % view(0,90);
-% % drawnow
-
-%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Temporal parameters
-CFL = 1;                                    %CFL (nonlinear parameter)
-to = 0;                                     %Initial time
-tf = 2;                                  %Final time
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dt = (min(dx,dy)*CFL/(max(abs(Uo))));    %Size of the time step
 T = round((tf-to)/dt);                      %Number of time steps
 t = to+dt:dt:(T*dt)+to;                        %Computational time
@@ -98,31 +135,51 @@ t = to+dt:dt:(T*dt)+to;                        %Computational time
 %Reynolds Number
 Re = max(Uo)*max([(xmax-xmin) (ymax-ymin)])/nu;
 
-%%
-%Linear Parameters
+disp('Reynolds Number')
+fprintf('Re = %.0f \n',Re)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Stiffnes linear diffusion matrix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Sx and Sy
 Sx = ((dt*nu)/(dx^2));  %Linear for x
 Sy = ((dt*nu)/(dy^2));  %Linear for y
 
-%%
-%Stiffnes linear difussion matrix
 %constants
 ap=(1+2*Sx+2*Sy);
 ax=-Sx;
 ay=-Sy;
 
-% Diagonals for compute K with Kronecker products
-K11 = spdiags(ones(m-2,1),0,(m-2),(m-2));
-K12 = spdiags([ax*ones(n-2,1) ap*ones(n-2,1) ax*ones(n-2,1)],[-1 0 1],(n-2),(n-2));
-K21 = spdiags(ones(m-2,2),[-1 1],(m-2),(m-2));
-K22 = spdiags(ay*ones(n-2,1),0,n-2,n-2);
-K1 = kron(K11,K12);
-K2 = kron(K21,K22);
-K = K1 + K2;
-%spy(K)
- 
-%%
-%Laplace operator matrix with five points second drivate and neuman
-%boundary conditions
+% % % Computing matrix K for diffusion with Kronecker products
+% % K11 = spdiags(ones(m-2,1),0,(m-2),(m-2));
+% % K12 = spdiags([ax*ones(n-2,1) ap*ones(n-2,1) ax*ones(n-2,1)],[-1 0 1],(n-2),(n-2));
+% % K21 = spdiags(ones(m-2,2),[-1 1],(m-2),(m-2));
+% % K22 = spdiags(ay*ones(n-2,1),0,n-2,n-2);
+% % K1 = kron(K11,K12);
+% % K2 = kron(K21,K22);
+% % K = K1 + K2;
+% % %spy(K)
+
+% Computing K with CSC storage
+[K11v,K11r,K11c] = csc_diag(ones(m-2,1),0);
+h1 = [ax*ones(n-2,1) ap*ones(n-2,1) ax*ones(n-2,1)];
+d1 = [-1 0 1];
+[K12v,K12r,K12c] = csc_diag(h1,d1);
+h2 = [ones(m-3,1) ones(m-3,1)];
+d2 = [-1 1];
+[K21v,K21r,K21c] = csc_diag(h2,d2);
+[K22v,K22r,K22c] = csc_diag(ay*ones(n-2,1),0);
+
+[K1v,K1r,K1c] = csc_kron(K11v,K11r,K11c,K12v,K12r,K12c);
+[K2v,K2r,K2c] = csc_kron(K21v,K21r,K21c,K22v,K22r,K22c);
+
+[Kv,Kr,Kc] = csc_sum(K1v,K1r,K1c,K2v,K2r,K2c);
+% csc_spy(Kv,Kr,Kc) 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Laplace operator matrix with five points second drivate and Neumann
+%boundary conditions (centered difference and ghost nodes)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Storing diagonals in one matrix and their positions
 % Ensuring 
@@ -136,31 +193,106 @@ else
     alp =-(2*((dy^2)/(dx^2)) + 2);
 end
 
-L11 = spdiags(ones(m,1),0,m,m);
+%
+% % % Computing matrix L for Poisson Equation with Kronecker products
+% % % Standard Matlab
+%
+% % L11 = spdiags(ones(m,1),0,m,m);
+% % h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
+% % h1(2,3) = alx*2;
+% % h1(n-1,1) = alx*2;
+% % L12 = spdiags(h1,[-1 0 1],n,n);
+% % h2 = ones(m,2);
+% % h2(2,2) = 2;
+% % h2(m-1,1) = 2;
+% % L21 = spdiags(h2,[-1 1],m,m);
+% % L22 = spdiags(aly*ones(n,1),0,n,n);
+% % L1 = kron(L11,L12);
+% % L2 = kron(L21,L22);
+% % L = L1 + L2;
+% % %spy(L)
+
+%
+% Computing L through CSC storage
+%
+[L11v,L11r,L11c] = csc_diag(ones(m,1),0);
 h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
-h1(2,3) = alx*2;
+h1(1,3) = alx*2;
 h1(n-1,1) = alx*2;
-L12 = spdiags(h1,[-1 0 1],n,n);
-h2 = ones(m,2);
-h2(2,2) = 2;
+d1 = [-1 0 1];
+[L12v,L12r,L12c] = csc_diag(h1,d1);
+h2 = ones(m-1,2);
+h2(1,2) = 2;
 h2(m-1,1) = 2;
-L21 = spdiags(h2,[-1 1],m,m);
-L22 = spdiags(aly*ones(n,1),0,n,n);
-L1 = kron(L11,L12);
-L2 = kron(L21,L22);
-L = L1 + L2;
-%spy(L)
+d2 = [-1 1];
+[L21v,L21r,L21c] = csc_diag(h2,d2);
+[L22v,L22r,L22c] = csc_diag(aly*ones(n,1),0);
 
+[L1v,L1r,L1c] = csc_kron(L11v,L11r,L11c,L12v,L12r,L12c);
+[L2v,L2r,L2c] = csc_kron(L21v,L21r,L21c,L22v,L22r,L22c);
 
-% Autovecor asociado al autovalor = 0
-% [vecprop0,valprop0] = svds(L,1,'smallest');
-[UL,SL,VL] = svds(L,1,'smallest');
-% V = (1/sqrt(n*m))*ones(n*m,1);
+[Lv,Lr,Lc] = csc_sum(L1v,L1r,L1c,L2v,L2r,L2c);
+%csc_spy(Lv,Lr,Lc)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Computing minimum singular vector related of L' for regularization
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % % WITH STANDARD MATLAB FUNCTION
+% [UL,SL,VL] = svds(L,1,'smallest');
+
+% % % WITH CSC
+
+% Calling preSOR
+[Ltv,Ltr,Ltc] = csc_trans(Lv,Lr,Lc);
+[LPtv,LPtr,LPtc,LQtv,LQtr,LQtc] = csc_preSOR(Ltv,Ltc,Ltr,w);
+[LPv,LPr,LPc,LQv,LQr,LQc] = csc_preSOR(Lv,Lc,Lr,w);
+
+%
+% Computing smallest related singular vector with inverse power method
+% C. POZRIKIDIS, 2001
+% A Note on the Regularization of the Discrete Poisson–Neumann Problem
+%
+
+% Left hand side singular vector (used for regularization)
+UL = 0.5*ones(n*m,1);
+b = zeros(n*m,1);
+nitersing = zeros(sing,1);
+normi = zeros(sing,1);
+for i=1:sing
+    [UL,pit] = csc_CG(Ltv,Ltr,Ltc,b,UL,mniterm,tolsing);
+    UL = UL./norm(UL);
+    nitersing(i) = pit;
+    % check performance again matlab standard solver
+    % normi(i) = norm(abs(xl-UL));
+end
+
+% Right Hand Side Singular Vector
+VL = (1/sqrt(n*m))*ones(n*m,1);
+
+%Regularization matrix
+RM = (eye(n*m)-UL*UL');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% To store Angle not corrected (before Regularization)
+%
+angnc = zeros(length(t),1);
+
+%
+% To store Angle corrected (after Regularization)
+%
+angc = zeros(length(t),1);
+
+%
+% For storing SOR solver iterations taken
+%
+soriter = zeros(length(t),4);
+
+j = 1;
 
 %%
 %Temporal loop
-cont = 1;
 for time=t
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -196,33 +328,50 @@ for time=t
         
     %Deviation angle (just for test)
     tetasr = acos(dot(rhsp,UL)*(1/(norm(rhsp)*norm(UL))));
+    angnc(j)=tetasr;
     
     %
     %%% Regularizacion (Posrikidiz, 2001) %%%
     %
     
     % Regularized right hand side
-    rhspr = (1-UL.^2).*rhsp;
-    
-    % Substracting the mean
-    rhspr = rhspr - mean(rhspr);
+    rhspr = RM*rhsp;
     
     % "Corrected angle" (just for test)
-    tetar = acos(dot(rhspr,UL)*(1/(norm(rhspr)*norm(UL))));
-    
+%     tetar = acos(dot(rhspr,UL)*(1/(norm(rhspr)*norm(UL))));
+    tetar = dot(UL',rhspr);
+    angc(j) = tetar;
+        
     %%% Neumann Boundary Condition == 0 for Poisson Equation %%%
     %%% They are already included in matrix L structure
     %%% Since Neumann boundary condition == 0, there's nothing to do with
     %%% the right hand side (due to the use of central difference and ghost
     %%% nodes for taking into account Neumann boundary condition)
     
+    %
     %%% Solving poisson equation %%%
-    P = L\rhspr;
-        
+    %
+    
+    % % % With Matlab Standard function
+    % % P = L\rhspr;
+    
+    % With own csc_SOR solver
+    if j==1
+        P = zeros(n*m,1);
+    end
+    [P,nt] = csc_SOR(Lv,Lr,Lc,LPv,LPr,LPc,LQv,LQr,LQc,rhspr,P,mniters,tolsor);
+    soriter(j,1) = nt;
+    j=j+1;
+    
     % Computing pressure gradient
     [dpdx,dpdy] = grad2D(P,P,dx,dy,n,m,upbound,dobound,lebound,ribound);
     Upp = Up - (dt/rho)*dpdx;
     Vpp = Vp - (dt/rho)*dpdy;
+
+    % % % Checking SOR performance in reference to Matlab Standard solver
+    % % [dpdx3,dpdy3] = grad2D(P3,P3,dx,dy,n,m,upbound,dobound,lebound,ribound);
+    % % soriter(j,3) = norm(abs(dpdx-dpdx3));
+    % % soriter(j,4) = norm(abs(dpdy-dpdy3));
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %  Third fractional step
@@ -247,10 +396,16 @@ for time=t
         end
     end
     
-    % Solving diffusion step
-    Ud = K\drhsx;
-    Vd = K\drhsy;
+%     % Solving diffusion step with Standard Matlab solver
+%     Ud = K\drhsx;
+%     Vd = K\drhsy;
     
+    % Solving diffusion step with Conjugate Gradient CSC method
+    [Ud,cgiu] = csc_CG(Kv,Kr,Kc,drhsx,drhsx,mniterd,tolcg);
+    [Vd,cgiv] = csc_CG(Kv,Kr,Kc,drhsy,drhsy,mniterd,tolcg);
+    
+    % fprintf('cgiu = %.0f \ncgiv = %.0f \n',cgiu,cgiv);
+        
     % Adding boundary conditions
     U = zeros(n*m,1);
     V = zeros(n*m,1);
@@ -289,6 +444,9 @@ for time=t
     surf(X,Y,Uplot); 
     axis([xmin xmax ymin ymax -1 1]);
     view(0,90);
+%     caxis([-0.4 1])
+    shading interp
+    colorbar
     drawnow
         
     % Plotting V velocity
@@ -296,6 +454,9 @@ for time=t
     surf(X,Y,Vplot); 
     axis([xmin xmax ymin ymax -1 1]);
     view(0,90);
+%     caxis([-0.4 0.1])
+    shading interp
+    colorbar
     drawnow
     
 end
