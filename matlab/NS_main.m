@@ -7,7 +7,7 @@ clear; clc;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Physical paramters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-nu = 0.0001;          %Kinematic viscosity (ISU)
+nu = 0.01;          %Kinematic viscosity (ISU)
 rho = 1000;         %Density of water, kg/m3 (ISU)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,8 +15,8 @@ rho = 1000;         %Density of water, kg/m3 (ISU)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Number of nodes in each direction
-n = 101;                     %Number of nodes in X direction
-m = 101;                     %Number of nodes in Y direction
+n = 6;                     %Number of nodes in X direction
+m = 6;                     %Number of nodes in Y direction
 
 %Boundaries locations of the domain
 xmin = 0.0;       %Left boundary

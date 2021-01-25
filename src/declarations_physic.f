@@ -30,6 +30,10 @@
 !
       DOUBLE PRECISION :: RHO
 !
+!     REYNOLDS NUMBER
+!
+      DOUBLE PRECISION :: RE
+!
 !     ============================================
 !
       END MODULE DECLARATIONS_PHYSIC

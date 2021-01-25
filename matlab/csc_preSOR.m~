@@ -30,17 +30,17 @@ nzp = m;
 if w==1
     nzq = 0;
 else
-    nzq = m;
-end
-
+    nzq = m
 for j=1:m
     for i=Ac(j):Ac(j+1)-1
         if Ar(i)<j
-            nzq = nzq + 1;
-        elseif Ar(i)>j
-            nzp = nzp + 1;
-        end
-    end
+            
+
+nzp1 = m + (length(Av)-m)/2;
+if w==1
+    nzq1 = (length(Av)-m)/2;
+else
+    nzq1 = m + (length(Av)-m)/2;
 end
 
 Qv = zeros(nzq,1);
