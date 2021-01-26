@@ -193,24 +193,24 @@ else
     alp =-(2*((dy^2)/(dx^2)) + 2);
 end
 
-%
-% Computing matrix L for Poisson Equation with Kronecker products
-% Standard Matlab
-
-L11 = spdiags(ones(m,1),0,m,m);
-h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
-h1(2,3) = alx*2;
-h1(n-1,1) = alx*2;
-L12 = spdiags(h1,[-1 0 1],n,n);
-h2 = ones(m,2);
-h2(2,2) = 2;
-h2(m-1,1) = 2;
-L21 = spdiags(h2,[-1 1],m,m);
-L22 = spdiags(aly*ones(n,1),0,n,n);
-L1 = kron(L11,L12);
-L2 = kron(L21,L22);
-L = L1 + L2;
-%spy(L)
+% % %
+% % % Computing matrix L for Poisson Equation with Kronecker products
+% % % Standard Matlab
+% % 
+% % L11 = spdiags(ones(m,1),0,m,m);
+% % h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
+% % h1(2,3) = alx*2;
+% % h1(n-1,1) = alx*2;
+% % L12 = spdiags(h1,[-1 0 1],n,n);
+% % h2 = ones(m,2);
+% % h2(2,2) = 2;
+% % h2(m-1,1) = 2;
+% % L21 = spdiags(h2,[-1 1],m,m);
+% % L22 = spdiags(aly*ones(n,1),0,n,n);
+% % L1 = kron(L11,L12);
+% % L2 = kron(L21,L22);
+% % L = L1 + L2;
+% % %spy(L)
 
 %
 % Computing L through CSC storage
@@ -238,7 +238,7 @@ d2 = [-1 1];
 % Computing minimum singular vector related of L' for regularization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % % WITH STANDARD MATLAB FUNCTION
-[UL1,SL1,VL1] = svds(L,1,'smallest');
+% % [UL1,SL1,VL1] = svds(L,1,'smallest');
 
 % % % WITH CSC
 
@@ -256,13 +256,13 @@ d2 = [-1 1];
 UL = 0.5*ones(n*m,1);
 b = zeros(n*m,1);
 nitersing = zeros(sing,1);
-normi = zeros(sing,1);
+% normi = zeros(sing,1);
 for i=1:sing
     [UL,pit] = csc_CG(Ltv,Ltr,Ltc,b,UL,mniterm,tolsing);
     UL = UL./norm(UL);
-    nitersing(i) = pit
+    nitersing(i) = pit;
     % check performance again matlab standard solver
-    normi(i) = norm((abs(UL)-abs(UL1)))
+    %  normi(i) = norm((abs(UL)-abs(UL1)))
 end
 
 % Right Hand Side Singular Vector
