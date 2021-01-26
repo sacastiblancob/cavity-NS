@@ -24,6 +24,7 @@
 !
 !  IN SUBROUTINE VARIABLES
 !
+      INTEGER TI
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
@@ -68,5 +69,50 @@
       CALL POINT_REGULARIZATION(SING,TOLSING,MNITERM,W,ISUSERW,LM,LPM,
      &    LQM,UL,VL,RM)
       IF(DEBUG) WRITE(*,*) 'EXIT POINT_REGULARIZATION'
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!  TIME LOOP
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      DO TI = 2,SIZE(T)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      IF(DEBUG) WRITE(*,*) 'TIME LOOP INIT ON TIME = ',T(TI),':',TI
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!  FIRST FRACTIONAL STEP
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      IF(DEBUG) WRITE(*,*) 'GOING INTO FIRST FRACTIONAL STEP'
+      CALL DIVER2D(DUDX,DUDY,DVDX,DVDY,UO,VO,BOUND,UPBOUNDI,
+     &     DOBOUNDI,LEBOUNDI,RIBOUNDI)
+      IF(DEBUG) WRITE(*,*) 'EXIT FIRST FRACTIONAL STEP'
+      
+!
+!  COMPUTING RIGHT HAND SIDE VECTOR
+!
+!     IF(DEBUG) WRITE(*,*) 'GOING INTO POINT_RHS'
+!     CALL POINT_RHS(CO,CA,CS,CCS,CB,BOUND,UPBOUNDI,DOBOUNDI,LEBOUNDI,
+!    &    RIBOUNDI,VX,VY)
+!     IF(DEBUG) WRITE(*,*) 'EXIT FROM POINT_RHS'
+!
+!  SOLVING THE SYSTEM OF EQUATIONS WITH CONJUGATE GRADIENT
+!
+!     IF(DEBUG) WRITE(*,*) 'CALLING SOLVER'
+!     CALL CSC_CG(KM,CS,CCS,MAXNITER,NITER,TOL,SIZE(CS))
+!     IF(DEBUG) WRITE(*,*) 'EXIT SOLVER'
+!
+!  UPDATING VARIABLES AND WRITING OUTPUTS
+!
+!     IF(DEBUG) WRITE(*,*) 'CALLING UPDATE AND WRITING'
+!     CALL UPDATE_AND_WRITE(X,Y,CA,ERRC,CO,CCS,CB,BOUND,T,TI,NTIME,
+!    &     WTIME,NITER,TOL,WTI)
+!     IF(DEBUG) WRITE(*,*) 'EXIT UPDATE AND WRITING'
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!  END TIME LOOP
+      ENDDO
+      
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
       STOP 0
       END

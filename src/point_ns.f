@@ -107,6 +107,28 @@
       ALLOCATE(RM(NX*NY,NX*NY))
       RM = 0D0
 !
+! ALLOCATE DERIVATIVES VECTORS
+!
+      !FOR NON-LINEAR ADVECTION STEP
+      ALLOCATE(DUDX(NX*NY))
+      DUDX = 0D0
+      ALLOCATE(DUDY(NX*NY))
+      DUDY = 0D0
+      ALLOCATE(DVDX(NX*NY))
+      DVDX = 0D0
+      ALLOCATE(DVDY(NX*NY))
+      DVDY = 0D0
+      !FOR RHS OF POISSON EQUATION
+      ALLOCATE(DUPDX(NX*NY))
+      DUPDX = 0D0
+      ALLOCATE(DVPDY(NX*NY))
+      DVPDY = 0D0
+      !FOR PRESURE
+      ALLOCATE(DPDX(NX*NY))
+      DPDX = 0D0
+      ALLOCATE(DPDY(NX*NY))
+      DPDY = 0D0
+!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  GRID - GRID - GRID - GRID
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

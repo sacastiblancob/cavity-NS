@@ -57,16 +57,85 @@
 !
 !  IN SUBROUTINE VARIABLES
 !
-      INTEGER :: AJ, BJ, P, AF, BF, IA, IB, J
+      INTEGER :: J, I, QP, PP
+      INTEGER :: NZP, NZQ
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
+! COMPUTING NZP AND NZQ
 !
-! ALLOCATING MC
-      CALL ALL_CSC(MC, MA%NR*MB%NR, MA%NC*MB%NC, MA%NZ*MB%NZ,NAMC)
-
-
+      NZP = MA%NC
+      IF((W.GT.(1.D0-1E-8)).AND.(W.LT.1.D0+1E-8)) THEN
+        NZQ = 0
+      ELSE
+        NZQ = MA%NC
+      ENDIF
+!
+      DO J = 1,MA%NC
+        DO I = MA%C(J),MA%C(J+1)-1
+          IF(MA%R(I).LT.J) THEN
+            NZQ = NZQ + 1
+          ELSEIF(MA%R(I).GT.J) THEN
+            NZP = NZP + 1
+          ENDIF
+        ENDDO
+      ENDDO
+! 
+! ALLOCATING MP AND MQ
+!
+      CALL ALL_CSC(MP, MA%NR, MA%NC, NZP, NAMP)
+      CALL ALL_CSC(MQ, MA%NR, MA%NC, NZQ, NAMQ)
+!
+! FILLING MP AND MQ
+!
+      MQ%C(1) = 1
+      MP%C(1) = 1
+!
+      QP = 1
+      PP = 1
+      IF((W.GT.(1.D0-1E-8)).AND.(W.LT.1.D0+1E-8)) THEN
+        DO J = 1,MA%NC
+          DO I = MA%C(J),MA%C(J+1)-1
+            IF(MA%R(I).LT.J) THEN
+              MQ%V(QP) = -MA%V(I)
+              MQ%R(QP) = MA%R(I)
+              QP = QP + 1
+            ELSE
+              MP%V(PP) = MA%V(I)
+              MP%R(PP) = MA%R(I) 
+              PP = PP + 1
+            ENDIF
+          ENDDO
+          MQ%C(J+1) = QP
+          MP%C(J+1) = PP
+        ENDDO
+      ELSE
+        DO J = 1,MA%NC
+          DO I = MA%C(J),MA%C(J+1)-1
+            IF(MA%R(I).LT.J) THEN
+              MQ%V(QP) = -MA%V(I)
+              MQ%R(QP) = MA%R(I)
+              QP = QP + 1
+            ELSEIF(MA%R(I).GT.J) THEN
+              MP%V(PP) = MA%V(I)
+              MP%R(PP) = MA%R(I) 
+              PP = PP + 1
+            ELSE
+              MQ%V(QP) = ((1D0/W) - 1D0)*MA%V(I)
+              MQ%R(QP) = MA%R(I)
+              QP = QP + 1
+              MP%V(PP) = (1D0/W)*MA%V(I)
+              MP%R(PP) = MA%R(I)
+              PP = PP + 1
+            ENDIF
+          ENDDO
+          MQ%C(J+1) = QP
+          MP%C(J+1) = PP
+        ENDDO
+      ENDIF
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       END SUBROUTINE CSC_PRESOR
+
+

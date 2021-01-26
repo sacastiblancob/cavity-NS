@@ -57,12 +57,14 @@ SRCDIAG = $(SRCDIR)/csc_diag.f
 SRCKRON = $(SRCDIR)/csc_kron.f
 SRCSUMC = $(SRCDIR)/csc_sum.f
 SRCTRAN = $(SRCDIR)/csc_trans.f
+SRCPSOR = $(SRCDIR)/csc_presor.f
+SRCCMMV = $(SRCDIR)/csc_mmatvec.f
+SRCCCGS = $(SRCDIR)/csc_cg.f
 SRCDIFF = $(SRCDIR)/diffusion_matrix.f
 SRCLAPL = $(SRCDIR)/laplacian_matrix.f
 SRCPREG = $(SRCDIR)/point_regularization.f
+SRCDIV2 = $(SRCDIR)/diver2d.f
 # SRCPRHS = $(SRCDIR)/point_rhs.f
-SRCCMMV = $(SRCDIR)/csc_mmatvec.f
-SRCCCGS = $(SRCDIR)/csc_cg.f
 # SRCUPDA = $(SRCDIR)/update_and_write.f
 #
 # OBJECT FILES
@@ -79,18 +81,20 @@ OBJDIAG = $(OBJDIR)/csc_diag.o
 OBJKRON = $(OBJDIR)/csc_kron.o
 OBJSUMC = $(OBJDIR)/csc_sum.o
 OBJTRAN = $(OBJDIR)/csc_trans.o
+OBJPSOR = $(OBJDIR)/csc_presor.o
+OBJCMMV = $(OBJDIR)/csc_mmatvec.o
+OBJCCGS = $(OBJDIR)/csc_cg.o
 OBJDIFF = $(OBJDIR)/diffusion_matrix.o
 OBJLAPL = $(OBJDIR)/laplacian_matrix.o
 OBJPREG = $(OBJDIR)/point_regularization.o
+OBJDIV2 = $(OBJDIR)/diverd2.o
 # OBJPRHS = $(OBJDIR)/point_rhs.o
-OBJCMMV = $(OBJDIR)/csc_mmatvec.o
-OBJCCGS = $(OBJDIR)/csc_cg.o
 # OBJUPDA = $(OBJDIR)/update_and_write.o
 #
 OBJECTS = $(OBJDCSC) $(OBJCSCS) $(OBJPHYS) $(OBJNUME) $(OBJWRHE) \
 			   	$(OBJPONS) $(OBJALLC) $(OBJDIAG) $(OBJKRON) $(OBJSUMC) \
-				 	$(OBJTRAN) $(OBJDIFF) $(OBJLAPL) $(OBJPREG) $(OBJCMMV) \
-					$(OBJCCGS) \
+				 	$(OBJTRAN) $(OBJPSOR) $(OBJCMMV) $(OBJCCGS) $(OBJDIFF) \
+					$(OBJLAPL) $(OBJPREG) $(OBJDIV2) \
 				 	$(OBJMAIN)
 #
 #
@@ -147,6 +151,15 @@ $(OBJSUMC): $(SRCSUMC)
 $(OBJTRAN): $(SRCTRAN)
 	    $(FC) $(CFLAGS) $(SRCTRAN) -o $(OBJTRAN)
 
+$(OBJPSOR): $(SRCPSOR)
+	    $(FC) $(CFLAGS) $(SRCPSOR) -o $(OBJPSOR)
+
+$(OBJCMMV): $(SRCCMMV)
+	    $(FC) $(CFLAGS) $(SRCCMMV) -o $(OBJCMMV)
+
+$(OBJCCGS): $(SRCCCGS)
+	    $(FC) $(CFLAGS) $(SRCCCGS) -o $(OBJCCGS)
+
 $(OBJDIFF): $(SRCDIFF)
 	    $(FC) $(CFLAGS) $(SRCDIFF) -o $(OBJDIFF)
 
@@ -156,14 +169,11 @@ $(OBJLAPL): $(SRCLAPL)
 $(OBJPREG): $(SRCPREG)
 	    $(FC) $(CFLAGS) $(SRCPREG) -o $(OBJPREG)
 
+$(OBJDIV2): $(SRCDIV2)
+	    $(FC) $(CFLAGS) $(SRCDIV2) -o $(OBJDIV2)
+
 #$(OBJPRHS): $(SRCPRHS)
 #	    $(FC) $(CFLAGS) $(SRCPRHS) -o $(OBJPRHS)
-
-$(OBJCMMV): $(SRCCMMV)
-	    $(FC) $(CFLAGS) $(SRCCMMV) -o $(OBJCMMV)
-
-$(OBJCCGS): $(SRCCCGS)
-	    $(FC) $(CFLAGS) $(SRCCCGS) -o $(OBJCCGS)
 
 #$(OBJUPDA): $(SRCUPDA)
 #	    $(FC) $(CFLAGS) $(SRCUPDA) -o $(OBJUPDA)

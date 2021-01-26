@@ -69,12 +69,12 @@
 ! COMPUTING MATRIX COEFFICIENTS
       IF(DY.GE.DX) THEN
         AP = -(2 + 2*((DX**2)/(DY**2)))
-        AX = 1D0
+        AX = 1.D0
         AY = (DX**2)/(DY**2)
       ELSE
         AP = -(2*((DY**2)/(DX**2)) + 2)
         AX = (DY**2)/(DX**2)
-        AY = 1D0
+        AY = 1.D0
       ENDIF
 
 !
@@ -82,7 +82,7 @@
       IF(DEBUG) WRITE(*,*) 'L11 MATRIX'
       !
       ! COMPUTING L11 MATRIX
-      HO = 1D0
+      HO = 1.D0
       DPO = 0
       CALL CSC_DIAG(1,NY,HO,DPO,L11,'L11   ')
       ! ! !WRITE(*,*) 'L11V ', L11%V
@@ -96,8 +96,8 @@
       H1(:,1) = AX*H1(:,1)
       H1(:,2) = AP*H1(:,2)
       H1(:,3) = AX*H1(:,3)
-      H1(1,3) = 2*AX
-      H1(NX-1,1) = 2*AX
+      H1(1,3) = 2.D0*AX
+      H1(NX-1,1) = 2.D0*AX
       ! D1
       D1 = (/-1, 0, 1/)
       ! CSC_DIAG (H1,D1)
@@ -109,8 +109,8 @@
       ! COMPUTING L21 MATRIX
       IF(DEBUG) WRITE(*,*) 'COMPUTING L21'
       H2 = 1.0D0
-      H2(1,2) = 2
-      H2(NY-1,1) = 2
+      H2(1,2) = 2.D0
+      H2(NY-1,1) = 2.D0
       D2 = (/-1, 1/)
       ! CSC_DIAG (H2,D2)
       CALL CSC_DIAG(2,NY-1,H2,D2,L21,'L21   ')

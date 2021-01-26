@@ -48,7 +48,7 @@
 !
 !  COMPUTING THE MULTIPLICATION
 !
-      CV = 0D0
+      CV = 0.D0
       DO J = 1,MA%NC
         DO I = MA%C(J),(MA%C(J+1)-1)
           CV(MA%R(I)) = CV(MA%R(I)) + MA%V(I)*BV(J)

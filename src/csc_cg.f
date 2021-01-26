@@ -4,7 +4,7 @@
      & (MA,BV,XV,MAXNITER,NITER,TOL,NE)
 !
 !***********************************************************************
-! 2D-DIFFUSION SOLVER SOLVER - FINITE DIFFERENCES
+! CSC_TOOLS - CONJUGATE GRADIENT SOLVER
 !***********************************************************************
 !
 !brief    1) SOLVES SYSTEM Ax = b WITH CONJUGATE GRADIENT METHOD

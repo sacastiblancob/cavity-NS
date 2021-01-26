@@ -41,7 +41,7 @@
 !
 !  STORING COLUMNS INDICES OF A IN THE VECTOR COLS
       DO J = 1,MA%NC
-        DO I = MA%C(J),MA%C(J)-1
+        DO I = MA%C(J),MA%C(J+1)-1
           COLS(I) = J
         ENDDO
       ENDDO

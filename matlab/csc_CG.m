@@ -16,6 +16,7 @@ function [x,t] = csc_CG(Av,Ar,Ac,b,x,niter,tol)
 
 ro = b - csc_matvec(Av,Ar,Ac,x);
 d = ro;
+
 for t = 1:niter
     Ad = csc_matvec(Av,Ar,Ac,d);
     if d'*Ad==0
