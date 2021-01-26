@@ -78,17 +78,17 @@
 !! INTERNAL NODES.!
 !!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!| DUDX      |-->| DU/DX VECTOR                                        |
-!| DUDY      |-->| DU/DY VECTOR                                        |
-!| DVDX      |-->| DV/DX VECTOR                                        |
-!| DVDY      |-->| DV/DY VECTOR                                        |
+!| DUDX      |<--| DU/DX VECTOR                                        |
+!| DUDY      |<--| DU/DY VECTOR                                        |
+!| DVDX      |<--| DV/DX VECTOR                                        |
+!| DVDY      |<--| DV/DY VECTOR                                        |
 !| UO        |-->| INITIAL/PREVIOUS VELOCITY IN X                      |
 !| VO        |-->| INITIAL/PREVIOUS VELOCITY IN Y                      |
 !| BOUND     |-->| BOUNDARY INDICES                                    |
 !| UPBOUNDI  |-->| TOP INTERNAL BOUNDARY INDICES                       |
 !| DOBOUNDI  |-->| BOTTOM INTERNAL BOUNDARY INDICES                    |
 !| LEBOUNDI  |-->| LEFT INTERNAL BOUNDARY INDICES                      |
-!| RIBOUNDI  |<--| RIGHT INTERNAL BOUNDARY INDICES                     |
+!| RIBOUNDI  |-->| RIGHT INTERNAL BOUNDARY INDICES                     |
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE DECLARATIONS_NUMERICAL, ONLY: NX,NY,DX,DY

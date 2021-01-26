@@ -20,7 +20,7 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 !  KINEMATIC VISCOSITY (ISU) (DOUBLE)
-NU = 0.01D0
+NU = 0.001D0
 
 !
 !  WATER DENSITY (ISU) (DOUBLE)
@@ -32,8 +32,9 @@ RHO = 1000.0D0
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 !  NUMBER OF NODES IN DIRECTIONS X AND Y (INTEGER)
-NX = 11
-NY = 11
+!  RECOMENDED MINIMUM NX=11, NY=11 (IF LESS ACCURACY IS COMPROMISED)
+NX = 101
+NY = 101
 
 !
 !  DIMENSIONS OF THE DOMAIN (ISU) (DOUBLE)
@@ -47,7 +48,7 @@ YMAX = 1.0D0
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 !  DESIRED COURANT NUMBER (DOUBLE)
-CFL = 1.0D0
+CFL = 0.8D0
 
 !
 ! INITIAL TIME (DOUBLE)
@@ -55,7 +56,7 @@ TO = 0.0D0
 
 !
 ! FINAL TIME (DOUBLE)
-TF = 2.0D0
+TF = 30.0D0
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  SOLVER OPTIONS
@@ -114,9 +115,26 @@ MNITERS = 1000
 !   VALUES
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! VALUE TO TIE PRESURE (PLOT PURPOSES)*
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+TIEP = 0.0D0
+
+!*THE METHOD USED TO SOLVE POISSON EQUATION IS COMPATIBILITY THROUGH
+! REGULARIZATION, THIS VALUE IS JUST FOR PLOTTING PURPOSES, GIVE A VALUE
+! TO TIE PRESURE IN THE BOTTOM LEFT CORNER, AND YOU WILL BE HAVE THE
+! PRESURE PLOT TIED RELATIVELY TO THAT VALUE
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! WRITING TIME INTERVAL (DOUBLE)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+WTIME = 0.5D0
+
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! DEBUGGER OPTION (.TRUE. OR .FALSE)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DEBUG = .TRUE.
+DEBUG = .FALSE.
 !
 
 /

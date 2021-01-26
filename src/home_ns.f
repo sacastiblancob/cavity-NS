@@ -24,7 +24,8 @@
 !
 !  IN SUBROUTINE VARIABLES
 !
-      INTEGER TI
+      INTEGER :: TI,I
+      INTEGER :: WTI = 0
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
@@ -32,7 +33,7 @@
 !
       NAMELIST /NSCONF/ NU,RHO,NX,NY,XMIN,XMAX,YMIN,YMAX,CFL,TO,TF,
      &    TOLCG,MNITERD,TOLSING,SING,MNITERM,W,ISUSERW,TOLSOR,MNITERS,
-     &    DEBUG
+     &    TIEP,WTIME,DEBUG
 !
       OPEN(1010, FILE = "nsconf.nml", STATUS = 'OLD')
       READ(1010, NML = NSCONF)
@@ -81,36 +82,93 @@
 !  FIRST FRACTIONAL STEP
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!  COMPUTING DERVIATIVES
+!
       IF(DEBUG) WRITE(*,*) 'GOING INTO FIRST FRACTIONAL STEP'
       CALL DIVER2D(DUDX,DUDY,DVDX,DVDY,UO,VO,BOUND,UPBOUNDI,
      &     DOBOUNDI,LEBOUNDI,RIBOUNDI)
       IF(DEBUG) WRITE(*,*) 'EXIT FIRST FRACTIONAL STEP'
-      
 !
-!  COMPUTING RIGHT HAND SIDE VECTOR
+!  COMPUTING UP AND VP, RESULT OF NON-LINEAL ADVECTION
 !
-!     IF(DEBUG) WRITE(*,*) 'GOING INTO POINT_RHS'
-!     CALL POINT_RHS(CO,CA,CS,CCS,CB,BOUND,UPBOUNDI,DOBOUNDI,LEBOUNDI,
-!    &    RIBOUNDI,VX,VY)
-!     IF(DEBUG) WRITE(*,*) 'EXIT FROM POINT_RHS'
+      IF(DEBUG) WRITE(*,*) 'COMPUTING UP AND VP'
+      DO I = 1,NX*NY
+        UP(I) = UO(I) - DT*(UO(I)*DUDX(I) + VO(I)*DUDY(I))
+        VP(I) = VO(I) - DT*(UO(I)*DVDX(I) + VO(I)*DVDY(I))
+      ENDDO
+      IF(DEBUG) WRITE(*,*) 'END COMPUTING UP AND VP'
 !
-!  SOLVING THE SYSTEM OF EQUATIONS WITH CONJUGATE GRADIENT
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!  SECOND FRACTIONAL STEP
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-!     IF(DEBUG) WRITE(*,*) 'CALLING SOLVER'
-!     CALL CSC_CG(KM,CS,CCS,MAXNITER,NITER,TOL,SIZE(CS))
-!     IF(DEBUG) WRITE(*,*) 'EXIT SOLVER'
+!  COMPUTING DUPDX AND DVPDY
 !
+      IF(DEBUG) WRITE(*,*) 'COMPUTING DUPDX AND DVPDY'
+      CALL GRAD2D(DUPDX,DVPDY,UP,VP,UPBOUND,DOBOUND,LEBOUND,RIBOUND)
+      IF(DEBUG) WRITE(*,*) 'END COMPUTING DUPDX AND DVPDY'
+!
+!  COMPUTING REGULARIZATION
+!
+      IF(DEBUG) WRITE(*,*) 'GOING INTO POISSON'
+      CALL POISSON(DUPDX,DVPDY,RM,LM,LPM,LQM,MNITERS,NITS,TOLSOR,
+     &    TIEP,P,PP)
+      IF(DEBUG) WRITE(*,*) 'EXIT FROM POISSON'
+!
+!  COMPUTING PRESURE GRADIENT
+!
+      IF(DEBUG) WRITE(*,*) 'COMPUTING PRESURE GRADIENT'
+      CALL GRAD2D(DPDX,DPDY,P,P,UPBOUND,DOBOUND,LEBOUND,RIBOUND)
+      IF(DEBUG) WRITE(*,*) 'END COMPUTING PRESURE GRADIENT'
+!
+!  COMPUTING UPP AND VPP
+!
+      IF(DEBUG) WRITE(*,*) 'COMPUTING UPP AND VPP'
+      DO I=1,NX*NY
+        UPP(I) = UP(I) - (DT/RHO)*DPDX(I)
+        VPP(I) = VP(I) - (DT/RHO)*DPDY(I)
+      ENDDO
+      IF(DEBUG) WRITE(*,*) 'END COMPUTING UPP AND VPP'
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!  THIRD FRACTIONAL STEP
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!  COMPUTING DIFFUSION
+!
+      IF(DEBUG) WRITE(*,*) 'GOING INTO DIFFUSION'
+      CALL DIFFUSION(U,V,UPP,VPP,SX,SY,KM,MNITERD,NTIDX,NTIDY,TOLCG,
+     &    BOUND,UPBOUND,DOBOUND,LEBOUND,RIBOUND,UPBOUNDI,DOBOUNDI,
+     &    LEBOUNDI,RIBOUNDI)
+      IF(DEBUG) WRITE(*,*) 'EXIT FROM DIFFUSION'
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  UPDATING VARIABLES AND WRITING OUTPUTS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-!     IF(DEBUG) WRITE(*,*) 'CALLING UPDATE AND WRITING'
-!     CALL UPDATE_AND_WRITE(X,Y,CA,ERRC,CO,CCS,CB,BOUND,T,TI,NTIME,
-!    &     WTIME,NITER,TOL,WTI)
-!     IF(DEBUG) WRITE(*,*) 'EXIT UPDATE AND WRITING'
+      IF(DEBUG) WRITE(*,*) 'CALLING UPDATE AND WRITING'
+      CALL UPDATE_AND_WRITE(X,Y,U,V,PP,UO,VO,T,TI,NTIME,
+     &     WTIME,NITS,NTIDX,NTIDY,TOLSOR,TOLCG,WTI)
+      IF(DEBUG) WRITE(*,*) 'EXIT UPDATE AND WRITING'
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  END TIME LOOP
       ENDDO
-      
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!  DEALLOCATING
+!
+      IF(DEBUG) WRITE(*,*) 'DEALLOCATING'
+      CALL KILLEMALL
+      IF(DEBUG) WRITE(*,*) 'HAPPY END :)"'
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
