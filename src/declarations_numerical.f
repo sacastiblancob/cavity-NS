@@ -196,6 +196,7 @@
 !
 ! BOUNDARY CONDITIONS MATRIX
 !
+      ! INTERPOLATION RESULT (TO READ AS CONDITIONS EVERY TIME STEP)
       DOUBLE PRECISION, ALLOCATABLE :: BCOND(:,:)
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

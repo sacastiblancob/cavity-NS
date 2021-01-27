@@ -64,12 +64,8 @@
 !
 ! COMPUTING NZP AND NZQ
 !
-      NZP = MA%NC
-      IF((W.GT.(1.D0-1E-8)).AND.(W.LT.1.D0+1E-8)) THEN
-        NZQ = 0
-      ELSE
-        NZQ = MA%NC
-      ENDIF
+      NZP = 0
+      NZQ = 0
 !
       DO J = 1,MA%NC
         DO I = MA%C(J),MA%C(J+1)-1
@@ -77,6 +73,13 @@
             NZQ = NZQ + 1
           ELSEIF(MA%R(I).GT.J) THEN
             NZP = NZP + 1
+          ELSEIF(MA%R(I).EQ.J) THEN
+            IF ((W.GT.(1.D0-1E-8)).AND.(W.LT.1.D0+1E-8)) THEN
+              NZP = NZP + 1
+            ELSE
+              NZP = NZP + 1
+              NZQ = NZQ + 1
+            ENDIF
           ENDIF
         ENDDO
       ENDDO

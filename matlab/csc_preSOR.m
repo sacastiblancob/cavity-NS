@@ -1,4 +1,4 @@
-function [Pv,Pr,Pc,Qv,Qr,Qc] = csc_preSOR(Av,Ac,Ar,w)
+function [Pv,Pr,Pc,Qv,Qr,Qc] = csc_preSOR(Av,Ar,Ac,w)
 %
 % This function takes the matrix A in CSC storage, and prepares the
 % matrices for solve the system Ax=b with SOR iterative method
@@ -26,12 +26,8 @@ function [Pv,Pr,Pc,Qv,Qr,Qc] = csc_preSOR(Av,Ac,Ar,w)
 %
 
 m = length(Ac)-1;
-nzp = m;
-if w==1
-    nzq = 0;
-else
-    nzq = m;
-end
+nzp = 0;
+nzq = 0;
 
 for j=1:m
     for i=Ac(j):Ac(j+1)-1
@@ -39,6 +35,13 @@ for j=1:m
             nzq = nzq + 1;
         elseif Ar(i)>j
             nzp = nzp + 1;
+        elseif Ar(i)==j
+            if w==1
+                nzp = nzp+1;
+            else
+                nzp = nzp+1;
+                nzq = nzq+1;
+            end
         end
     end
 end

@@ -15,8 +15,8 @@ rho = 1000;         %Density of water, kg/m3 (ISU)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Number of nodes in each direction
-n = 11;                      %Number of nodes in X direction
-m = 11;                      %Number of nodes in Y direction
+n = 6;                      %Number of nodes in X direction
+m = 6;                      %Number of nodes in Y direction
 
 %Boundaries locations of the domain
 xmin = 0.0;       %Left boundary
@@ -244,7 +244,7 @@ d2 = [-1 1];
 
 % Calling preSOR
 [Ltv,Ltr,Ltc] = csc_trans(Lv,Lr,Lc);
-[LPv,LPr,LPc,LQv,LQr,LQc] = csc_preSOR(Lv,Lc,Lr,w);
+[LPv,LPr,LPc,LQv,LQr,LQc] = csc_preSOR(Lv,Lr,Lc,w);
 
 %
 % Computing smallest related singular vector with inverse power method
