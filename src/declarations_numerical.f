@@ -31,6 +31,14 @@
 !
       LOGICAL :: ISUSERW
 !
+! IS THE BOUNDARY CONDITION GIVEN IN A FILE
+!
+      LOGICAL :: ISBOUND
+!
+! IS THE HOT START GIVEN IN A FILE
+!
+      LOGICAL :: ISSTART
+!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !     INTEGERS
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,6 +194,10 @@
       DOUBLE PRECISION :: WTIME
       DOUBLE PRECISION :: NTIME = 0D0
 !
+! BOUNDARY CONDITIONS MATRIX
+!
+      DOUBLE PRECISION, ALLOCATABLE :: BCOND(:,:)
+!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! CSC OBJECTS (MATRICES)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,6 +209,18 @@
 ! MATRIX TO SOLVE DIFFUSION STEP
 !
       TYPE(CSC_OBJ) :: KM
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! CHARACTERS
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+! BOUNDARY CONDITIONS FILE PATH
+!
+      CHARACTER(LEN=250) :: BOUNDFILE
+!
+! HOT START FILE PATH
+!
+      CHARACTER(LEN=250) :: STARTFILE
 !
 !     ============================================
 !

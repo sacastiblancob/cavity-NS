@@ -2,7 +2,7 @@
                   SUBROUTINE UPDATE_AND_WRITE
 !                 ***************************
      & (X,Y,U,V,PP,UO,VO,T,TI,NTIME,WTIME,NITS,NTIDX,NTIDY,
-     &    TOLSOR,TOLCG,WTI)
+     &    TOLSOR,TOLCG,WTI,RE)
 !
 !***********************************************************************
 ! 2D-NAVIER-STOKES SOLVER - FINITE DIFFERENCES
@@ -29,6 +29,7 @@
 !| TOLSOR    |-->| GIVEN SOR SOLVER TOLERANCE                          |
 !| TOLCG     |-->| GIVEN CG SOLVER TOLERANCE                           |
 !| WTI       |-->| HANDLING WRITE TIME                                 |
+!| RE        |-->| REYNOLDS NUMBER                                     |
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE DECLARATIONS_NUMERICAL, ONLY:NX,NY,NT,DT
@@ -45,13 +46,13 @@
       DOUBLE PRECISION, INTENT(INOUT) :: NTIME
       DOUBLE PRECISION, INTENT(IN) :: WTIME
       INTEGER, INTENT(IN) :: NITS,NTIDX,NTIDY
-      DOUBLE PRECISION, INTENT(IN) :: TOLSOR,TOLCG
+      DOUBLE PRECISION, INTENT(IN) :: TOLSOR,TOLCG,RE
       INTEGER, INTENT(INOUT) :: WTI
 !
 ! IN SUBROUTINE VARIABLES
 !
       INTEGER :: I,J,K
-      DOUBLE PRECISION :: C1,C2,C3,C4,C5
+      DOUBLE PRECISION :: C1,C2,C3,C4,C5,C6
       CHARACTER(LEN=80) :: FOUT
       CHARACTER(LEN=9)  :: FMT2
       CHARACTER(LEN=34) :: FSPEC
@@ -68,6 +69,7 @@
         WRITE(*,*) REPEAT('~',72)
         WRITE(*,*) 'INIT DONE'
         WRITE(*,*) 'WRITING INITIAL CONDITION'
+        WRITE(*,*) 'REYNOLDS NUMBER: ',RE
         WRITE(*,*) 'TIME STEP VALUE: ',DT
         WRITE(*,*) 'INITIAL TIME: ',T(1)
         WRITE(*,*) 'FINAL TIME: ',T(SIZE(T))
@@ -83,7 +85,7 @@
 !
 !  HEADER
         WRITE(WTI,*) 'TITLE = "NAVIER STOKES 2D - FD"'
-        WRITE(WTI,*) 'VARIABLES = "X" "Y" "U" "V" "P"'
+        WRITE(WTI,*) 'VARIABLES = "X" "Y" "U" "V" "P" "U_MAG"'
         WRITE(WTI,*) ' ZONE F=POINT, I=',NX,', J= ',NY
 !
 !  WRITING RESULTS
@@ -95,7 +97,8 @@
             C3 = UO(K)
             C4 = VO(K)
             C5 = PP(K)
-            WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5
+            C6 = SQRT(C3*C3 + C4*C4)
+            WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5, C6
             K = K + 1
           ENDDO
         ENDDO
@@ -121,6 +124,7 @@
         WRITE(*,*) 'TIME: ',T(TI),'(s)'
         WRITE(*,*) 'TIME STEP: ',TI,' OF ',SIZE(T)
         WRITE(*,*) 'TIME STEP VALUE: ',DT
+        WRITE(*,*) 'REYNOLDS NUMBER: ',RE
         WRITE(*,*) 'LAST SOR SOLVER TOL FOR THE RESIDUAL(POISSON): ' 
         WRITE(*,*) TOLSOR
         WRITE(*,*) 'LAST SOR SOLVER NUMBER OF ITERATIONS(POISSON): '
@@ -146,7 +150,7 @@
 !
 !  HEADER
         WRITE(WTI,*) 'TITLE = "NAVIER STOKES 2D - FD"'
-        WRITE(WTI,*) 'VARIABLES = "X" "Y" "U" "V" "P"'
+        WRITE(WTI,*) 'VARIABLES = "X" "Y" "U" "V" "P" "U_MAG"'
         WRITE(WTI,*) ' ZONE F=POINT, I=',NX,', J= ',NY
 !
 !  WRITING RESULTS
@@ -158,7 +162,8 @@
             C3 = UO(K)
             C4 = VO(K)
             C5 = PP(K)
-            WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5
+            C6 = SQRT(C3*C3 + C4*C4)
+            WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5, C6
             K = K + 1
           ENDDO
         ENDDO

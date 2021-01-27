@@ -33,8 +33,8 @@ RHO = 1000.0D0
 !
 !  NUMBER OF NODES IN DIRECTIONS X AND Y (INTEGER)
 !  RECOMENDED MINIMUM NX=11, NY=11 (IF LESS ACCURACY IS COMPROMISED)
-NX = 101
-NY = 101
+NX = 81
+NY = 81
 
 !
 !  DIMENSIONS OF THE DOMAIN (ISU) (DOUBLE)
@@ -47,8 +47,8 @@ YMAX = 1.0D0
 !  TIME DISCRETIZATION
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-!  DESIRED COURANT NUMBER (DOUBLE)
-CFL = 0.8D0
+!  DESIRED COURANT NUMBER (DOUBLE) (<= 1.0)
+CFL = 0.95D0
 
 !
 ! INITIAL TIME (DOUBLE)
@@ -56,7 +56,7 @@ TO = 0.0D0
 
 !
 ! FINAL TIME (DOUBLE)
-TF = 2.0D0
+TF = 10.0D0
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  SOLVER OPTIONS
@@ -130,6 +130,34 @@ TIEP = 0.0D0
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 WTIME = 0.5D0
+
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! TOP BOUNDARY CONDITION FILE (UNDER DEVELOPMENT)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+! IS THE BOUNDARY CONDITION GIVEN? (.TRUE. OR .FALSE.), IF FALSE,
+! DEFAULT U(TOP) = 1.0
+!
+ISBOUND = .TRUE.
+
+! IF ISBOUND IS .TRUE. ENTER THE PATH TO LIQUID BOUNDARY FILE
+! BE CAREFUL WITH THE IMPUT, LET THE WATER GO OUT
+!
+BOUNDFILE = './liquid/liquid_boundary.txt'
+
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! COMPUTATION CONTINUED (UNDER DEVELOPMENT)
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+! IS THE COMPUTATION CONTINUED? (.TRUE. OR .FALSE.)
+!
+ISSTART = .TRUE.
+
+! IF THE COMPUTATION IS CONTINUED, ENTER THE PATH TO THE INITIAL
+! CONDITION FILE, BE CAREFUL, NX AND NY MUST BE THE SAME THAT IN
+! PREVIOUS TIME
+!
+STARTFILE = './liquid/hot_start.dat'
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! DEBUGGER OPTION (.TRUE. OR .FALSE)

@@ -52,6 +52,7 @@ SRCCSCS = $(SRCDIR)/csc_storage.f
 SRCDCSC = $(SRCDIR)/declarations_csc.f
 SRCWRHE = $(SRCDIR)/write_headers.f
 SRCPONS = $(SRCDIR)/point_ns.f
+SRCLECB = $(SRCDIR)/lecbound.f
 SRCALLC = $(SRCDIR)/all_csc.f
 SRCDIAG = $(SRCDIR)/csc_diag.f
 SRCKRON = $(SRCDIR)/csc_kron.f
@@ -80,6 +81,7 @@ OBJCSCS = $(OBJDIR)/csc_storage.o
 OBJDCSC = $(OBJDIR)/declarations_csc.o
 OBJWRHE = $(OBJDIR)/write_headers.o
 OBJPONS = $(OBJDIR)/point_ns.o
+OBJLECB = $(OBJDIR)/lecbound.o
 OBJALLC = $(OBJDIR)/all_csc.o
 OBJDIAG = $(OBJDIR)/csc_diag.o
 OBJKRON = $(OBJDIR)/csc_kron.o
@@ -100,10 +102,10 @@ OBJUPDA = $(OBJDIR)/update_and_write.o
 OBJKILL = $(OBJDIR)/killemall.o
 #
 OBJECTS = $(OBJDCSC) $(OBJCSCS) $(OBJPHYS) $(OBJNUME) $(OBJWRHE) \
-			   	$(OBJPONS) $(OBJALLC) $(OBJDIAG) $(OBJKRON) $(OBJSUMC) \
-				 	$(OBJTRAN) $(OBJPSOR) $(OBJCMMV) $(OBJCCGS) $(OBJSORS) \
-					$(OBJDIFF) $(OBJLAPL) $(OBJPREG) $(OBJDIV2) $(OBJGRA2) \
-					$(OBJPOIS) $(OBJDSOL) $(OBJUPDA) $(OBJKILL) \
+			   	$(OBJPONS) $(OBJLECB) $(OBJALLC) $(OBJDIAG) $(OBJKRON) \
+					$(OBJSUMC) $(OBJTRAN) $(OBJPSOR) $(OBJCMMV) $(OBJCCGS) \
+					$(OBJSORS) $(OBJDIFF) $(OBJLAPL) $(OBJPREG) $(OBJDIV2) \
+					$(OBJGRA2) $(OBJPOIS) $(OBJDSOL) $(OBJUPDA) $(OBJKILL) \
 				 	$(OBJMAIN)
 #
 #
@@ -144,6 +146,9 @@ $(OBJWRHE): $(SRCWRHE)
 
 $(OBJPONS): $(SRCPONS)
 	    $(FC) $(CFLAGS) $(SRCPONS) -o $(OBJPONS)
+
+$(OBJLECB): $(SRCLECB)
+	    $(FC) $(CFLAGS) $(SRCLECB) -o $(OBJLECB)
 
 $(OBJALLC): $(SRCALLC)
 	    $(FC) $(CFLAGS) $(SRCALLC) -o $(OBJALLC)
