@@ -60,9 +60,10 @@
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-!  WRITING INITIAL CONDITION IF TI == 2
+!  WRITING INITIAL CONDITION IF TI == 1
 !
-      IF(TI.EQ.2) THEN
+      IF(TI.EQ.1) THEN
+        WTI = 10
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! WRITING IN TERMINAL
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -103,73 +104,74 @@
           ENDDO
         ENDDO
         CLOSE(WTI)
-        WTI = WTI + 10
+        WTI = WTI + 1
         NTIME = T(1) + WTIME
-      ENDIF
+      ELSE !UPDATE VARIABLES AND WRITING IN REGULAR SIMULATION
 !
 !  UPDATING UO,VO
 !
-      DO I = 1,SIZE(UO)
-        UO(I) = U(I)
-        VO(I) = V(I)
-      ENDDO
+        DO I = 1,SIZE(UO)
+          UO(I) = U(I)
+          VO(I) = V(I)
+        ENDDO
 !
 !  WRITING IF IS TIME TO WRITE
 !
-      IF((T(TI).GT.(NTIME-EPSI)).OR.(T(TI).EQ.T(NT))) THEN
+        IF((T(TI).GT.(NTIME-EPSI)).OR.(T(TI).EQ.T(NT))) THEN
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! WRITING IN TERMINAL
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        WRITE(*,*) REPEAT('~',72)
-        WRITE(*,*) 'TIME: ',T(TI),'(s)'
-        WRITE(*,*) 'TIME STEP: ',TI,' OF ',SIZE(T)
-        WRITE(*,*) 'TIME STEP VALUE: ',DT
-        WRITE(*,*) 'REYNOLDS NUMBER: ',RE
-        WRITE(*,*) 'LAST SOR SOLVER TOL FOR THE RESIDUAL(POISSON): ' 
-        WRITE(*,*) TOLSOR
-        WRITE(*,*) 'LAST SOR SOLVER NUMBER OF ITERATIONS(POISSON): '
-        WRITE(*,*) NITS
-        WRITE(*,*) 'LAST CG SOLVER TOL FOR THE RESIDUAL(DIFFUSION): ' 
-        WRITE(*,*) TOLCG
-        WRITE(*,*) 'LAST CG SOLVER NUMBER OF ITERATIONS(DIFFUSION): '
-        WRITE(*,*) 'U: ',NTIDX,', V: ',NTIDY
-        WRITE(*,*) 'WRITING FILE NUMBER: ', INT(WTI/10)
-        WRITE(*,*) REPEAT('~',72)
+          WRITE(*,*) REPEAT('~',72)
+          WRITE(*,*) 'TIME: ',T(TI),'(s)'
+          WRITE(*,*) 'TIME STEP: ',TI,' OF ',SIZE(T)
+          WRITE(*,*) 'TIME STEP VALUE: ',DT
+          WRITE(*,*) 'REYNOLDS NUMBER: ',RE
+          WRITE(*,*) 'LAST SOR SOLVER TOL FOR THE RESIDUAL(POISSON): ' 
+          WRITE(*,*) TOLSOR
+          WRITE(*,*) 'LAST SOR SOLVER NUMBER OF ITERATIONS(POISSON): '
+          WRITE(*,*) NITS
+          WRITE(*,*) 'LAST CG SOLVER TOL FOR THE RESIDUAL(DIFFUSION): ' 
+          WRITE(*,*) TOLCG
+          WRITE(*,*) 'LAST CG SOLVER NUMBER OF ITERATIONS(DIFFUSION): '
+          WRITE(*,*) 'U: ',NTIDX,', V: ',NTIDY
+          WRITE(*,*) 'WRITING FILE NUMBER: ', (WTI-10)
+          WRITE(*,*) REPEAT('~',72)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  WRITING FILES
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        FMT2 = '(i4.4,a4)'
-        FSPEC = './res/2D_Navier-Stokes_'
-        FOUT = FSPEC
+          FMT2 = '(i4.4,a4)'
+          FSPEC = './res/2D_Navier-Stokes_'
+          FOUT = FSPEC
 !
-        WRITE(UNIT=FOUT(24:34),FMT=FMT2) WTI,'.dat'
+          WRITE(UNIT=FOUT(24:34),FMT=FMT2) WTI,'.dat'
 !
 ! HERE IS CALLING STOP 1 WITHOUT REASON
-        OPEN(WTI,FILE=FOUT)
+          OPEN(WTI,FILE=FOUT)
 !
 !  HEADER
-        WRITE(WTI,*) 'TITLE = "NAVIER STOKES 2D - FD"'
-        WRITE(WTI,*) 'VARIABLES = "X" "Y" "U" "V" "P" "U_MAG"'
-        WRITE(WTI,*) ' ZONE F=POINT, I=',NX,', J= ',NY
+          WRITE(WTI,*) 'TITLE = "NAVIER STOKES 2D - FD"'
+          WRITE(WTI,*) 'VARIABLES = "X" "Y" "U" "V" "P" "U_MAG"'
+          WRITE(WTI,*) ' ZONE F=POINT, I=',NX,', J= ',NY
 !
 !  WRITING RESULTS
-        K = 1
-        DO J = 1,NY
-          DO I = 1,NX
-            C1 = X(I)
-            C2 = Y(J)
-            C3 = UO(K)
-            C4 = VO(K)
-            C5 = PP(K)
-            C6 = SQRT(C3*C3 + C4*C4)
-            WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5, C6
-            K = K + 1
+          K = 1
+          DO J = 1,NY
+            DO I = 1,NX
+              C1 = X(I)
+              C2 = Y(J)
+              C3 = UO(K)
+              C4 = VO(K)
+              C5 = PP(K)
+              C6 = SQRT(C3*C3 + C4*C4)
+              WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5, C6
+              K = K + 1
+            ENDDO
           ENDDO
-        ENDDO
-        CLOSE(WTI)
-        WTI = WTI + 10
-        NTIME = NTIME + WTIME
+          CLOSE(WTI)
+          WTI = WTI + 1
+          NTIME = NTIME + WTIME
+        ENDIF
       ENDIF
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

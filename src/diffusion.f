@@ -1,8 +1,9 @@
 !                    ********************
                      SUBROUTINE DIFFUSION
 !                    ********************
-     & (U,V,UPP,VPP,SX,SY,KM,MNITERD,NTIDX,NTIDY,TOLCG,BOUND,UPBOUND,
-     &  DOBOUND,LEBOUND,RIBOUND,UPBOUNDI,DOBOUNDI,LEBOUNDI,RIBOUNDI)
+     & (U,V,UO,VO,UPP,VPP,SX,SY,KM,MNITERD,NTIDX,NTIDY,TOLCG,BOUND,
+     &  UPBOUND,DOBOUND,LEBOUND,RIBOUND,UPBOUNDI,DOBOUNDI,LEBOUNDI,
+     &  RIBOUNDI)
 !
 !***********************************************************************
 ! 2D-NAVIER STOKES SOLVER - FINITE DIFFERENCES
@@ -16,6 +17,7 @@
 !
 !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !| U,V       |<->| U AND V SOLUTION OF THIRD FRACTIONAL STEP           |
+!| UO,VO     |<->| U AND V SOLUTION PREVIOUS TIME STEP, WITH NEW BOUND.|
 !| UPP,VPP   |-->| U AND V SOLUTION OF SECOND FRACTIONAL STEP          |
 !| SX,SY     |-->| DIFFUSIVITY DISCRETE COEFFICIENTS                   |
 !| KM        |-->| DIFFUSION MATRIX                                    |
@@ -40,7 +42,7 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       DOUBLE PRECISION, DIMENSION(NX*NY), INTENT(INOUT) :: U,V
-      DOUBLE PRECISION, DIMENSION(NX*NY), INTENT(IN) :: UPP,VPP
+      DOUBLE PRECISION, DIMENSION(NX*NY), INTENT(IN) :: UPP,VPP,UO,VO
       DOUBLE PRECISION, INTENT(IN) :: SX,SY,TOLCG
       TYPE(CSC_OBJ), INTENT(IN) :: KM
       INTEGER, INTENT(IN) :: MNITERD
@@ -71,8 +73,8 @@
         IF(ANY(J.EQ.BOUND)) THEN
             CONTINUE
         ELSEIF(ANY(J.EQ.UPBOUNDI)) THEN
-            DRHSX(L) = UPP(J) - AY*1.D0
-            DRHSY(L) = VPP(J)
+            DRHSX(L) = UPP(J) - AY*UO(J+NX)
+            DRHSY(L) = VPP(J) - AY*VO(J+NX)
             L=L+1;
         ELSEIF(ANY(J.EQ.RIBOUNDI)) THEN
             DRHSX(L) = UPP(J)
@@ -95,12 +97,12 @@
             DRHSY(L) = VPP(J)
             L=L+1;
         ELSEIF(J.EQ.(NX*NY-2*NX+2)) THEN
-            DRHSX(L) = UPP(J) - AY*1.D0
-            DRHSY(L) = VPP(J)
+            DRHSX(L) = UPP(J) - AY*UO(J+NX)
+            DRHSY(L) = VPP(J) - AY*VO(J+NX)
             L=L+1;
         ELSEIF(J.EQ.(NX*NY-NX-1)) THEN
-            DRHSX(L) = UPP(J) - AY*1.D0
-            DRHSY(L) = VPP(J)
+            DRHSX(L) = UPP(J) - AY*UO(J+NX)
+            DRHSY(L) = VPP(J) - AY*UO(J+NX)
             L=L+1;
         ELSE
             DRHSX(L) = UPP(J)
@@ -124,29 +126,29 @@
       L = 1
       DO J = 1,NX*NY
         IF(ANY(J.EQ.UPBOUND)) THEN
-            U(J) = 1.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSEIF(ANY(J.EQ.RIBOUND)) THEN
-            U(J) = 0.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSEIF(ANY(J.EQ.DOBOUND)) THEN
-            U(J) = 0.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSEIF(ANY(J.EQ.LEBOUND)) THEN
-            U(J) = 0.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSEIF(J.EQ.1) THEN
-            U(J) = 0.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSEIF(J.EQ.(NX)) THEN
-            U(J) = 0.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSEIF(J.EQ.(NX*NY-NX+1)) THEN
-            U(J) = 1.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSEIF(J.EQ.(NX*NY)) THEN
-            U(J) = 1.D0
-            V(J) = 0.D0
+            U(J) = UO(J)
+            V(J) = VO(J)
         ELSE
             U(J) = UD(L)
             V(J) = VD(L)

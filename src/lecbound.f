@@ -1,15 +1,13 @@
 !                       *******************
                         SUBROUTINE LECBOUND
 !                       *******************
-     & (UO,VO,P,ISBOUND,BOUNDFILE,ISSTART,STARTFILE,T,TO,TF,XMAX,XMIN,X)
-!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !***********************************************************************
 ! NAVIER-STOKES SOLVER - FINITE DIFFERENCES
 !***********************************************************************
 !
 !brief    1) READING BOUNDARY AND INITIAL CONDITION FILES,
-!            ALSO INTERPOLATES
+!            ALSO INTERPOLATES, AND SET CFL AND COMPUTATIONAL TIME
 !
 !history  Sergio Castiblanco
 !+        26/01/2021
@@ -17,38 +15,19 @@
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!| UO,VO,P   |<--| VECTORS WITH INITIAL CONDITIONS                     |
-!| ISBOUND   |-->| LOGICAL IF USER BOUNDARY CONDITIONS                 |
-!| BOUNDFILE |-->| NAME OF BOUNDARY FILE                               |
-!| ISSTART   |-->| LOGICAL IF HOT START                                |
-!| STARTFILE |-->| NAME OF HOT START FILE                              |
-!| T         |-->| VECTOR WITH TIMES                                   |
-!| TO        |-->| INITIAL TIME                                        |
-!| TF        |-->| FINAL TIME                                          |
-!| XMAX,XMIN |-->| MAX AND MIN X COORDINATES                           |
-!| X         |-->| VECTOR WITH X COORDINATES                           |
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       USE CSC_STORAGE
-      USE DECLARATIONS_NUMERICAL, ONLY:DEBUG,NX,NY,DT,NT,BCOND
+      USE DECLARATIONS_PHYSIC
+      USE DECLARATIONS_NUMERICAL
 !
       IMPLICIT NONE
 !    
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-! INTENT VARIABLES
-!
-      DOUBLE PRECISION, DIMENSION(NX*NY), INTENT(INOUT) :: UO,VO,P
-      LOGICAL, INTENT(IN) :: ISBOUND, ISSTART
-      CHARACTER(LEN=250), INTENT(INOUT) :: BOUNDFILE, STARTFILE
-      DOUBLE PRECISION, DIMENSION(NT), INTENT(IN) :: T
-      DOUBLE PRECISION, INTENT(IN) :: TO, TF, XMAX, XMIN
-      DOUBLE PRECISION, DIMENSION(NX), INTENT(IN) :: X
-!
 ! IN SUBROUTINE VARIABLES
 !
-      INTEGER :: I,J,K,NLINES
+      INTEGER :: I,J,K,INX,INY
+      INTEGER :: NLINES = 1
       ! NUMBER OF ITERATIONS IN SOR SOLVER
       INTEGER :: NIU,NIV
       !AUXILIAR DOUBLE
@@ -57,10 +36,6 @@
       DOUBLE PRECISION, DIMENSION(23) :: BVAL
       !DUMMY MATRIX TO READ INPUTS
       DOUBLE PRECISION, DIMENSION(1000,23) :: BREAD
-      !DUMMY MATRIX TO STORE ACTUAL INPUTS
-      DOUBLE PRECISION, ALLOCATABLE :: BINP(:,:)
-      !MATRIX WITH BOUNDARY CONDITIONS INTERPOLATED IN (X)
-      DOUBLE PRECISION, ALLOCATABLE :: BCUX(:,:), BCVX(:,:)
       !MATRICES TO MAKE SPLINE INTERPOLATION
       TYPE(CSC_OBJ) :: MS
       !RIGHT HAND SIDES TO SOLVE INTERPOLATION SYSTEM
@@ -75,10 +50,12 @@
       !TOLERANCE FOR SOR SOLVER
       DOUBLE PRECISION :: TOLU = 1E-14
       DOUBLE PRECISION :: TOLV = 1E-14
+      !DUMMY CHARACTER
+      CHARACTER(LEN=40) :: DCHA
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-!  READING INITIAL CONDITION
+!  READING BOUNDARY CONDITION FILE
 !
       IF(ISBOUND) THEN
 !
@@ -88,19 +65,19 @@
 !
 ! READING BOUNDARY FILE
 !
-        OPEN (UNIT=1, FILE = TRIM(BOUNDFILE), STATUS='OLD')
+        OPEN (UNIT=10001, FILE = TRIM(BOUNDFILE), STATUS='OLD')
         K = 1
         DO I = 1,1000
           IF((I.EQ.1).OR.(I.EQ.2)) THEN
-            READ(1,*, END=10)
+            READ(10001,*, END=10)
           ELSE
-            READ(1,*, END=10) BVAL
+            READ(10001,*, END=10) BVAL
             BREAD(K,:) = BVAL
             K = K+1
             ! ! !WRITE(*,*) BCOND(I,:)
           ENDIF
         ENDDO
-10      CLOSE(1)    
+10      CLOSE(10001)    
 !
 ! TAKING VALUES FROM BREAD TO BINP
 !
@@ -114,11 +91,146 @@
         ENDDO
         NLINES = NLINES-1
         ! ! !WRITE(*,*) 'NLINES...', NLINES
+        IF(NLINES.LT.2) THEN
+          WRITE(*,*) 'ERROR IN BOUNDARY FILE, NOT ENOUGH INFORMATION, NO
+     &T ENOUGH LINES :('
+          WRITE(*,*) 'ERROR IN: ',TRIM(BOUNDFILE)
+          STOP 1
+        ENDIF
         ALLOCATE(BINP(NLINES,23))
+        ALLOCATE(TINP(NLINES))
         DO I = 1,NLINES
           BINP(I,:) = BREAD(I,:)
           ! ! !WRITE(*,*) 'BINP', BINP(I,:)
         ENDDO
+        TINP = BINP(:,1)
+        !WRITE(*,*) 'TINP ', TINP, (TINP(1).EQ.TO)
+        !
+        ! PROOF ABOUT QUALITY OF INPUTS
+        !
+        IF(ABS(TINP(1) - TO).GT.0.0001) THEN
+          WRITE(*,*) '!ERROR!, BOUNDARY FILE FIRST TIME ENTRY IS NOT THE
+     & SAME AS INITIAL TIME GIVEN IN NSCONF.NML FILE :('
+          WRITE(*,*) '!EXIT!, ERROR IN: ',TRIM(BOUNDFILE)
+          STOP 1
+        ENDIF
+        ! ! !WRITE(*,*) 'TINP ', TINP(NLINES), TF, TINP(NLINES).LT.TF
+        IF(TINP(NLINES).LE.TF) THEN
+          WRITE(*,*) '!ERROR!, LAST TIME ENTRY IN BOUNDARY FILE IS LESS
+     &OR EQUAL THAN FINAL TIME GIVEN IN NSCONF.NML FILE :('
+          WRITE(*,*) 'PLEASE ADD RESPECTIVE ADDITIONAL LINES TO ENSURE T
+     &HAT FINAL TIME IN BOUNDARY FILE IS GREATER THAN CONF FINAL TIME'
+          WRITE(*,*) '!EXIT!, ERROR IN: ',TRIM(BOUNDFILE)
+          STOP 1
+        ENDIF
+      ENDIF
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! READING INITIAL CONDITION FILE
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      IF(ISSTART) THEN
+        OPEN(UNIT=10002,FILE=TRIM(STARTFILE),STATUS='OLD')
+        READ(10002,*)
+        READ(10002,*)
+        READ(10002,*) DCHA,DCHA,DCHA,INX,DCHA,INY
+        ! ! !WRITE(*,*) 'DCHA ',INX,INY
+        IF((INX.NE.NX).AND.(INY.NE.NY)) THEN
+          CLOSE(UNIT=10002)
+          WRITE(*,*) 'BAD INITIAL CONDITION, NUMBER OF NODES IN INITIAL 
+     &CONDITION IS NOT THE SAME AS THE CONFIGURATION GIVEN ONES :('
+          WRITE(*,*) 'CONF: ',NX,NY,'.NE. HOT START: ',INX,INY
+          WRITE(*,*) 'ERROR IN: ',TRIM(STARTFILE)
+          STOP 1
+        ENDIF
+        !
+        ! FILLING INTIAL CONDITIONS
+        !
+        DO I = 1,NX*NY
+          READ(10002,*) R,R,UO(I),VO(I),P(I),R
+        ENDDO
+        ! ! !WRITE(*,*) 'UO',UO
+        ! ! !WRITE(*,*) 'VO',VO
+        ! ! !WRITE(*,*) 'P',P
+        CLOSE(UNIT=10002)
+      ENDIF
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! SETTLING CFL AND COMPUTATIONAL TIME
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+! INITIAL CONDITION IF NO HOT START FILE
+!
+      UO = 0D0
+      VO = 0D0
+      P = 0D0
+      IF(.NOT.ISSTART) THEN
+        DO I=1,SIZE(UPBOUND)
+          UO(UPBOUND(I)) = 1.0D0
+        ENDDO
+        UO(NX*NY) = 1.0D0
+        UO(NX*NY-NX+1) = 1.0D0
+      ENDIF
+!
+! TIME - TIME - TIME - TIME
+!
+! SETTING TIME PARAMETERS
+!
+      IF(DEBUG) WRITE(*,*) 'COMPUTING DT AND NT'
+      !
+      ! CHANGING CFL IF IS GREATER THAN 1.2
+      !
+      IF(CFL.GT.1.2D0) THEN
+        CFL = 1.2D0
+      ENDIF
+      !
+      !COMPUTING DT WITH CFL, THE MINIMAL DIFFERENTIAL, AND MAXIMUM
+      !INPUT VELOCITY
+      !
+      IF(ISBOUND) THEN
+        DT = (MIN(DX,DY)*CFL)
+        DT = DT/MAX(MAXVAL(ABS(UO)),MAXVAL(ABS(BINP(:,2:23))))
+      ELSE
+        DT = (MIN(DX,DY)*CFL)/MAXVAL(ABS(UO))
+      ENDIF 
+      !
+      ! NUMBER OF TIME STEPS
+      !
+      NT = INT(FLOOR((TF-TO)/DT))
+      !
+      ! WRITING IN TERMINAL CFL, DX, DY, DT, NT
+      !
+      WRITE(*,*) REPEAT('~',72)
+      WRITE(*,*) 'COURANT NUMBER: ',CFL
+      WRITE(*,*) 'DIFFERENTIALS IN SPACE, DX, DY: ',DX, DY
+      WRITE(*,*) 'TIME STEP: ',DT
+      WRITE(*,*) 'TOTAL NUMBER OF TIME STEPS: ',NT
+      WRITE(*,*) REPEAT('~',72)
+!
+! ALLOCATE TIME VECTOR
+!
+      IF(DEBUG) WRITE(*,*) 'ALLOCATING AND COMPUTING TIME VECTOR'
+      ALLOCATE(T(NT))
+!
+! FILLING TIME VECTOR
+!
+      T(1) = TO
+      DO I=2,NT
+        T(I) = T(I-1) + DT
+      ENDDO
+!
+! ALLOCATING BOUNDARY CONDITIONS MATRIX
+!
+      ALLOCATE(BCONDU(NT,NX))
+      BCONDU = 0.D0
+      ALLOCATE(BCONDV(NT,NX))
+      BCONDV = 0.D0
+!
+! END TIME - END TIME - END TIME
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! INTERPOLATION IN SPACE FOR TOP BOUNDARY
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      IF(ISBOUND) THEN
 !
 ! INTEPOLATION OVER GRID POINTS (FILLING BCUX AND BCVX)
 !
@@ -128,7 +240,7 @@
         ALLOCATE(BCUX(NLINES,NX))
         ALLOCATE(BCVX(NLINES,NX))
 !
-! FILLING MATRIX TO SOLVE SPLINE INTERPOLATION
+! FILLING MATRIX TO SOLVE C'S SPLINE INTERPOLATION
 !
         IF(DEBUG) WRITE(*,*) 'COMPUTING SPLINE INTERPOLATION'
         !DXC = (XMAX-XMIN)/10
@@ -153,6 +265,9 @@
         ! ! !WRITE(*,*) 'MS%C ',MS%C
         ! ! !WRITE(*,*) 'MS%R ',MS%R
         ! ! !WRITE(*,*) 'MS%V ',MS%V
+!
+! INTERPOLATING IN DIMENSION X (FILLING BCUX AND BCVX WITH SPLINE)
+!
         DO I=1,NLINES
         !I=1
 !!!!
@@ -184,14 +299,6 @@
         ENDDO
         CALL CSC_CG(MS,RHSU,CU,1000,NIU,TOLU,11)
         CALL CSC_CG(MS,RHSV,CV,1000,NIV,TOLV,11)
-        DO J=1,11
-          IF(ABS(CU(J)).LT.TOLU) THEN
-            CU(J) = 0.D0
-          ENDIF
-          IF(ABS(CV(J)).LT.TOLV) THEN
-            CV(J) = 0.D0
-          ENDIF
-        ENDDO
         ! ! !WRITE(*,*) 'NIU ',NIU
         ! ! !WRITE(*,*) 'NIV ',NIV
         ! ! !WRITE(*,*) 'CU ',CU
@@ -224,6 +331,38 @@
         ! ! !WRITE(*,*) 'BV ',BV
         ! ! !WRITE(*,*) 'CV ',CV
         ! ! !WRITE(*,*) 'DV ',DV
+        DO J=1,11
+          ! CHECKING A ZEROS
+          IF(ABS(AU(J)).LT.TOLU) THEN
+            AU(J) = 0.D0
+          ENDIF
+          IF(ABS(AV(J)).LT.TOLV) THEN
+            AV(J) = 0.D0
+          ENDIF
+          ! CHECKING C ZEROS
+          IF(ABS(CU(J)).LT.TOLU) THEN
+            CU(J) = 0.D0
+          ENDIF
+          IF(ABS(CV(J)).LT.TOLV) THEN
+            CV(J) = 0.D0
+          ENDIF
+        ENDDO
+        DO J=1,10
+          ! CHECKING B ZEROS
+          IF(ABS(BU(J)).LT.TOLU) THEN
+            BU(J) = 0.D0
+          ENDIF
+          IF(ABS(BV(J)).LT.TOLV) THEN
+            BV(J) = 0.D0
+          ENDIF
+          ! CHECKING D ZEROS
+          IF(ABS(DU(J)).LT.TOLU) THEN
+            DU(J) = 0.D0
+          ENDIF
+          IF(ABS(DV(J)).LT.TOLV) THEN
+            DV(J) = 0.D0
+          ENDIF
+        ENDDO
         !
         ! INTERPOLATING ON X
         !
@@ -249,9 +388,56 @@
 !
 !!!!
         ENDDO
+!
+! INTERPOLATING IN TIME WITH LINEAR INTERPOLATION
+!
+        K = 1
+        R = TINP(K+1)
+        DO I = 1,NT
+        !I=1
+!!!
+        IF(T(I).LT.R) THEN
+          DO J = 1,NX
+            BCONDU(I,J) = BCUX(K,J) + (T(I)-TINP(K))*((BCUX(K+1,J) -
+     &    BCUX(K,J))/(TINP(K+1) - TINP(K)))
+            BCONDV(I,J) = BCVX(K,J) + (T(I)-TINP(K))*((BCVX(K+1,J) -
+     &    BCVX(K,J))/(TINP(K+1) - TINP(K)))
+          ENDDO
+          ! ! !WRITE(*,*) 'ITIMU ',I,T(I),BCONDU(I,:)
+          ! ! !WRITE(*,*) 'ITIMV ',I,T(I),BCONDV(I,:)
+        ELSE
+          K = K + 1
+          R = TINP(K+1)
+          DO J = 1,NX
+            BCONDU(I,J) = BCUX(K,J) + (T(I)-TINP(K))*((BCUX(K+1,J) -
+     &    BCUX(K,J))/(TINP(K+1) - TINP(K)))
+            BCONDV(I,J) = BCVX(K,J) + (T(I)-TINP(K))*((BCVX(K+1,J) -
+     &    BCVX(K,J))/(TINP(K+1) - TINP(K)))
+          ENDDO
+          ! ! !WRITE(*,*) 'ITIMU ',I,T(I),BCONDU(I,:)
+          ! ! !WRITE(*,*) 'ITIMV ',I,T(I),BCONDV(I,:)
+        ENDIF
 
 
+!!!
+        ENDDO
       ENDIF
+!
+! MODIFICATION OVER INITIAL CONDITION IF ISBOUND BUT NOT ISSTART
+!
+      IF(ISBOUND.AND.(.NOT.ISSTART)) THEN
+        K = 1
+        UO(NX*NY-NX+1) = BCONDU(1,K)
+        VO(NX*NY-NX+1) = BCONDV(1,K)
+        DO I = 1,SIZE(UPBOUND)
+          K = K+1
+          UO(UPBOUND(I)) = BCONDU(1,K)
+          VO(UPBOUND(I)) = BCONDV(1,K)
+        ENDDO
+        UO(NX*NY) = BCONDU(1,K)
+        VO(NX*NY) = BCONDV(1,K)
+      ENDIF
+
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !

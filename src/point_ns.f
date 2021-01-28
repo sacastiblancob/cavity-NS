@@ -253,52 +253,6 @@
 ! END GRID - END GRID - END GRID
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-! INITIAL CONDITION
-!
-      DO I=1,SIZE(UPBOUND)
-        UO(UPBOUND(I)) = 1.0D0
-      ENDDO
-      UO(NX*NY) = 1.0D0
-      UO(NX*NY-NX+1) = 1.0D0
-
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! TIME - TIME - TIME - TIME
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!
-! SETTING TIME PARAMETERS
-!
-      IF(DEBUG) WRITE(*,*) 'COMPUTING DT AND NT'
-!  WRITING CHANGE IN DT IF ANY
-      IF(CFL.GT.1.2D0) THEN
-        CFL = 1.2D0
-      ENDIF
-      DT = (MIN(DX,DY)*CFL)/MAXVAL(ABS(UO))
-      WRITE(*,*) REPEAT('~',72)
-      WRITE(*,*) 'COURANT NUMBER: ',CFL
-      WRITE(*,*) 'DIFFERENTIALS IN SPACE, DX, DY: ',DX, DY
-      WRITE(*,*) 'TIME STEP: ',DT
-      WRITE(*,*) REPEAT('~',72)
-      NT = INT(FLOOR((TF-TO)/DT))
-!
-! ALLOCATE TIME VECTOR
-!
-      IF(DEBUG) WRITE(*,*) 'ALLOCATING AND COMPUTING TIME VECTOR'
-      ALLOCATE(T(NT))
-!
-! FILLING TIME VECTOR
-!
-      T(1) = TO
-      DO I=2,NT
-        T(I) = T(I-1) + DT
-      ENDDO
-!
-! REYNOLDS NUMBER
-!
-      RE = MAXVAL(ABS(UO))*(MIN(XMAX-XMIN,YMAX-YMIN))/(NU)
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! END TIME - END TIME - END TIME
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       END SUBROUTINE POINT_NS

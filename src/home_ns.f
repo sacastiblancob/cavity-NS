@@ -24,7 +24,7 @@
 !
 !  IN SUBROUTINE VARIABLES
 !
-      INTEGER :: TI,I
+      INTEGER :: TI,I,K
       INTEGER :: WTI = 0
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,18 +46,23 @@
       CALL WRITE_HEADERS
       IF(DEBUG) WRITE(*,*) 'EXIT WRITE_HEADERS'
 !
-!  ALLOCATING MEMORY AND SETTING INITIAL CONDITION
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!  ALLOCATING MEMORY INITIAL CONDITION, GRID, ETC.
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+!  POINT_NS (GRID)
 !
       IF(DEBUG) WRITE(*,*) 'GOING INTO POINT_NS'
       CALL POINT_NS
       IF(DEBUG) WRITE(*,*) 'EXIT POINT_NS'
 !
-!  READING AND INTERPOLATING BOUNDARY AND INITIAL CONDITIONS (IF ANY)
+!  LECBOUND (INITIAL CONDITION, CFL AND TIME
 !
       IF(DEBUG) WRITE(*,*) 'GOING INTO LECBOUND'
-      CALL LECBOUND(UO,VO,P,ISBOUND,BOUNDFILE,ISSTART,STARTFILE,T,TO,
-     &    TF,XMAX,XMIN,X)
+      CALL LECBOUND
       IF(DEBUG) WRITE(*,*) 'EXIT LECBOUND'
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 !  COMPUTING STIFFNESS DIFUSSION MATRIX
 !
@@ -81,9 +86,31 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  TIME LOOP
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      DO TI = 2,SIZE(T)
+      DO TI = 1,SIZE(T)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
       IF(DEBUG) WRITE(*,*) 'TIME LOOP INIT ON TIME = ',T(TI),':',TI
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      IF(TI.NE.1) THEN
+!!!!!
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! UPDATING BOUNDARIES TO NEXT TIME STEP
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!
+      IF(DEBUG) WRITE(*,*) 'UPDATING PREVIOUS SOLUTION BOUNDARIES'
+      IF(ISBOUND) THEN
+      K = 1
+      UO(NX*NY-NX+1) = BCONDU(TI,K)
+      VO(NX*NY-NX+1) = BCONDV(TI,K)
+      DO I = 1,SIZE(UPBOUND)
+        K = K+1
+        UO(UPBOUND(I)) = BCONDU(TI,K)
+        VO(UPBOUND(I)) = BCONDV(TI,K)
+      ENDDO
+      UO(NX*NY) = BCONDU(TI,K)
+      VO(NX*NY) = BCONDV(TI,K)
+      ENDIF
+!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  FIRST FRACTIONAL STEP
@@ -149,12 +176,19 @@
 !  COMPUTING DIFFUSION
 !
       IF(DEBUG) WRITE(*,*) 'GOING INTO DIFFUSION'
-      CALL DIFFUSION(U,V,UPP,VPP,SX,SY,KM,MNITERD,NTIDX,NTIDY,TOLCG,
-     &    BOUND,UPBOUND,DOBOUND,LEBOUND,RIBOUND,UPBOUNDI,DOBOUNDI,
+      CALL DIFFUSION(U,V,UO,VO,UPP,VPP,SX,SY,KM,MNITERD,NTIDX,NTIDY,
+     &    TOLCG,BOUND,UPBOUND,DOBOUND,LEBOUND,RIBOUND,UPBOUNDI,DOBOUNDI,
      &    LEBOUNDI,RIBOUNDI)
       IF(DEBUG) WRITE(*,*) 'EXIT FROM DIFFUSION'
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! UPDATING REYNOLDS NUMBER
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      RE = MAX(MAXVAL(ABS(U)),MAXVAL(ABS(V)))*(MIN(XMAX-XMIN,YMAX-YMIN))
+      RE = RE/NU
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!!!!!!
+      ENDIF
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  UPDATING VARIABLES AND WRITING OUTPUTS
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -164,6 +198,7 @@
       CALL UPDATE_AND_WRITE(X,Y,U,V,PP,UO,VO,T,TI,NTIME,
      &     WTIME,NITS,NTIDX,NTIDY,TOLSOR,TOLCG,WTI,RE)
       IF(DEBUG) WRITE(*,*) 'EXIT UPDATE AND WRITING'
+
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  END TIME LOOP

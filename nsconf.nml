@@ -33,8 +33,8 @@ RHO = 1000.0D0
 !
 !  NUMBER OF NODES IN DIRECTIONS X AND Y (INTEGER)
 !  RECOMENDED MINIMUM NX=11, NY=11 (IF LESS ACCURACY IS COMPROMISED)
-NX = 41
-NY = 41
+NX = 81
+NY = 81
 
 !
 !  DIMENSIONS OF THE DOMAIN (ISU) (DOUBLE)
@@ -56,7 +56,7 @@ TO = 0.0D0
 
 !
 ! FINAL TIME (DOUBLE)
-TF = 10.0D0
+TF = 60.0D0
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !  SOLVER OPTIONS
@@ -129,10 +129,10 @@ TIEP = 0.0D0
 ! WRITING TIME INTERVAL (DOUBLE)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-WTIME = 0.5D0
+WTIME = 1.0D0
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! TOP BOUNDARY CONDITION FILE (UNDER DEVELOPMENT)
+! TOP BOUNDARY CONDITION FILE
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 ! IS THE BOUNDARY CONDITION GIVEN? (.TRUE. OR .FALSE.), IF FALSE,
@@ -146,19 +146,29 @@ ISBOUND = .TRUE.
 BOUNDFILE = './liquid/liquid_boundary.txt'
 
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! COMPUTATION CONTINUED (UNDER DEVELOPMENT)
+! COMPUTATION CONTINUED
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 ! IS THE COMPUTATION CONTINUED? (.TRUE. OR .FALSE.)
 !
-ISSTART = .TRUE.
+ISSTART = .FALSE.
 
 ! IF THE COMPUTATION IS CONTINUED, ENTER THE PATH TO THE INITIAL
 ! CONDITION FILE, BE CAREFUL, NX AND NY MUST BE THE SAME THAT IN
 ! PREVIOUS TIME
 !
 STARTFILE = './liquid/hot_start.dat'
-
+!
+!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+! NOTE ABOUT BOUNDARY AND INITIAL CONDITION:
+!
+! IF A BOUNDARY FILE IS GIVEN BUT NOT A HOT START, THE INITIAL CONDITION
+! IS A ZERO FIELD, WITH THE TOP BOUNDARY AT T=INITIAL TIME GIVEN IN THE
+! BUNDARY CONDITION
+!
+! IF A INITIAL CONDITION IS GIVEN BUT NOT A BOUNDARY FILE, THE TOP
+! BOUNDARY WILL BE SETTLED AT 1.0 
+!
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! DEBUGGER OPTION (.TRUE. OR .FALSE)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
