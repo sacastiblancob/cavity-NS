@@ -15,8 +15,8 @@ rho = 1000;         %Density of water, kg/m3 (ISU)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Number of nodes in each direction
-n = 41;                      %Number of nodes in X direction
-m = 41;                      %Number of nodes in Y direction
+n = 81;                      %Number of nodes in X direction
+m = 81;                      %Number of nodes in Y direction
 
 %Boundaries locations of the domain
 xmin = 0.0;       %Left boundary
@@ -101,9 +101,7 @@ end
 xaux = xmin:(xmax-xmin)/10:xmax;
 y = [1 0.5 1 0.5 1 0.5 1 0.5 1 0.5 1];
 pp = spline(xaux,y);
-x2 = (x - xmin);
-x2 = x2/max(x2);
-x2 = 10*x2;
+x2 = (xaux(10*
 
 if tolsor > (min(dx,dy)*min(dx,dy))/2
     tolsor = (min(dx,dy)*min(dx,dy))/2;
