@@ -10,7 +10,6 @@ Most relevant things in this solver are the Compressed Sparse Column (CSC) tools
 <!--![plot](./images/cavity.png)-->
 <p align="center">
   <img src="./images/cavity.png" width="450" title="Velocities Field">
-  <img src="./images/cavity.gif" width="350" title="Variable Top Boundary Condition">
 </p>
 
 ## Installation
@@ -54,7 +53,7 @@ BOUNDFILE = './liquid/liquid_boundary.txt
 You should keep the format of the examples, you can use the file "./liquid/sample_boundary.ods" to create your own top boundary condition over time: two first rows are reserved for variable names and units, the first column is reserved for time (in seconds) and the next 22 columns for the values of velocity in X (U) and velocity in Y (V). The location of these velocities are shown in the next image.
 
 <p align="center">
-  <img src="./images/boundary_condition.PNG" width="350" title="Boundary Condition">
+  <img src="./images/boundary_condition.PNG" width="500" title="Boundary Condition">
 </p>
 
 The values of the given boundary condition will be interpolated into the grid through cubic spline interpolation method (to ensure smooth changes in the space), and it will have linear interpolation in time.
@@ -72,6 +71,10 @@ The number of nodes in the variables NX and NY in the "nsconf.nml" file must be 
 Default initial condition is U=0 and V=0 in whole domain, and U=1.0 in the top boundary, and it will prevail the same all along the simulation unless otherwise stated by the user in the configuration.
 
 Boundary and initial condition options are now Fully Functional, and these were tested with a wide range of combinations.
+
+<p align="center">
+  <img src="./images/cavity.gif" width="350" title="Variable Top Boundary Condition">
+</p>
 
 ## Brief Physical and Numerical Theory
 
