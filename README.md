@@ -8,10 +8,8 @@ With Fortran - GNU-Fortran compiler (and Matlab originals).
 Most relevant things in this solver are the Compressed Sparse Column (CSC) tools developed.
 
 <!--![plot](./images/cavity.png)-->
-<p align="left">
+<p align="center">
   <img src="./images/cavity.png" width="350" title="Velocities Field">
-</p>
-<p align="right">
   <img src="./images/cavity.gif" width="350" title="Variable Top Boundary Condition">
 </p>
 
@@ -79,9 +77,9 @@ Boundary and initial condition options are now Fully Functional, and these were 
 
 Navier-Stokes Equations:
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial u_{i}}{\partial t} + u_{j}\frac{\partial u_{i}}{\partial x_{j}}= \frac{1}{\rho} \frac{\partial P}{\partial x_{i}} + \nu\frac{\partial^2 u_{i}}{\partial x_{i} \partial x_{j}} + F_{i}">
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20u_{i}}{\partial%20t}%20+%20u_{j}\frac{\partial%20u_{i}}{\partial%20x_{j}}=%20\frac{1}{\rho}%20\frac{\partial%20P}{\partial%20x_{i}}%20+%20\nu\frac{\partial^2%20u_{i}}{\partial%20x_{i}%20\partial%20x_{j}}%20+%20F_{i}">
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial u_{i}}{\partial x_{i}} = 0">
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20u_{i}}{\partial%20x_{i}}%20=%200">
 
 The strategy to solve them is Fractional Steps:
 
