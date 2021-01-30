@@ -1,0 +1,3 @@
+#results folder
+
+Here the results will be stored, just drag the .dat files to paraview, choose Tecplot Reader and enjoy (do not drag this file with the others).
