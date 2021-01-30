@@ -94,7 +94,7 @@ The strategy to solve them is Fractional Steps:
 
 2. Solve the pressure by the introduction of Euler discretization in time and the continuity condition, which leads to the Poisson's equation with Null Neumann Boundary Conditions:
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20P^2}{\partial^{2}%20x}%20+%20\frac{\partial%20P^{2}}{\partial^{2}%20y}%20=%20-\frac{\Delta%20t}{\rho}%20\left(%20\frac{\partial%20Up}{\partial%20x}%20+%20\frac{\partial%20Vp}{\partial%20y}\right)">
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial^2%20P}{\partial%20x^{2}}%20+%20\frac{\partial^{2}%20P}{\partial%20y^{2}}%20=%20-\frac{\Delta%20t}{\rho}%20\left(%20\frac{\partial%20Up}{\partial%20x}%20+%20\frac{\partial%20Vp}{\partial%20y}\right)">
 
 <img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20P}{\partial%20\overrightarrow{n}}%20=%200">
 
@@ -114,9 +114,9 @@ The derivatives of the pressure are computed with second order centered scheme. 
 
 3. Solve the diffusion step with second order centered schemes for second derivatives and backward Euler in time (which means implicit).
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{U%20-%20Upp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial%20U^{2}}{\partial^{2}%20x}%20+%20\frac{\partial%20U^{2}}{\partial^{2}%20y}\right)">
+<img src="https://latex.codecogs.com/gif.latex?\frac{U%20-%20Upp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial^{2}%20U}{\partial%20x^{2}}%20+%20\frac{\partial^{2}%20U}{\partial%20y^{2}}\right)">
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{V%20-%20Vpp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial%20V^{2}}{\partial^{2}%20x}%20+%20\frac{\partial%20V^{2}}{\partial^{2}%20y}\right)">
+<img src="https://latex.codecogs.com/gif.latex?\frac{V%20-%20Vpp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial^{2}%20V}{\partial%20x^{2}}%20+%20\frac{\partial^{2}%20V}{\partial%20y^{2}}\right)">
 
 The system of equations is solved with Conjugate Gradient Method (typically arround 15 iterations per U and per V). 
 
