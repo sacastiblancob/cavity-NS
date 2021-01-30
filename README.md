@@ -7,7 +7,13 @@ With Fortran - GNU-Fortran compiler (and Matlab originals).
 
 Most relevant things in this solver are the Compressed Sparse Column (CSC) tools developed.
 
-![plot](./images/cavity.png)
+<!--![plot](./images/cavity.png)-->
+<p align="left">
+  <img src="./images/cavity.png" width="350" title="Velocities Field">
+</p>
+<p align="right">
+  <img src="./images/cavity.gif" width="350" title="Variable Top Boundary Condition">
+</p>
 
 ## Installation
 
@@ -41,11 +47,83 @@ The results will be storaged in the ./res/ forder, in the .dat files. You can lo
 
 Printed Variables: Coordinates, Velocity in X direction (U), Velocity in Y direction (V), Pressure (P) and magnitude of velocity (U_MAG)
 
+To change top boundary condition input, you should enable the logical ISBOUND in the configuration file "nsconf.nml", and introuduce the path to your boundary condition file in the configuration variable BOUNDFILE, example:
+
+```sh
+BOUNDFILE = './liquid/liquid_boundary.txt
+```
+
+You should keep the format of the examples, you can use the file "./liquid/sample_boundary.ods" to create your own top boundary condition over time: two first rows are reserved for variable names and units, the first column is reserved for time (in seconds) and the next 22 columns for the values of velocity in X (U) and velocity in Y (V). The location of these velocities are shown in the next image.
+
+<p align="center">
+  <img src="./images/boundary_condition.png" width="350" title="Boundary Condition">
+</p>
+
+The values of the given boundary condition will be interpolated into the grid through cubic spline interpolation method (to ensure smooth changes in the space), and it will have linear interpolation in time.
+
+You can also give a text file with initial condition, enable the logical ISSTART in the "nsconf.nml" file, and introduce the path to your initial condition file in the configuration variable STARTFILE:
+
+```sh
+STARTFILE = './liquid/hot_start.dat
+```
+
+This initial condition file should have the same format as the result files stored in "./res/" folder, after run your simulation; so the best way to create an initial condition is by running once the simulation with default initial condition.
+
+The number of nodes in the variables NX and NY in the "nsconf.nml" file must be the same as the number of nodes in your initial condition file.
+
+Default initial condition is U=0 and V=0 in whole domain, and U=1.0 in the top boundary, and it will prevail the same all along the simulation unless otherwise stated by the user in the configuration.
+
+Boundary and initial condition options are now Fully Functional, and these were tested with a wide range of combinations.
+
+## Brief Physical and Numerical Theory
+
+Navier-Stokes Equations:
+
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial u_{i}}{\partial t} + u_{j}\frac{\partial u_{i}}{\partial x_{j}}= \frac{1}{\rho} \frac{\partial P}{\partial x_{i}} + \nu\frac{\partial^2 u_{i}}{\partial x_{i} \partial x_{j}} + F_{i}">
+
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial u_{i}}{\partial x_{i}} = 0">
+
+The strategy to solve them is Fractional Steps:
+
+1. Solve the advection step with second order upwind scheme in space and forward Euler in time (which means explicit).
+
+<img src="https://latex.codecogs.com/gif.latex?Up_{i} = Uo_{i} - \Delta t Uo \frac{\delta Uo}{\delta x} - \Delta t Vo \frac{\delta Uo}{\delta y}">
+
+<img src="https://latex.codecogs.com/gif.latex?Vp_{i} = Vo_{i} - \Delta t Uo \frac{\delta Vo}{\delta x} - \Delta t Vo \frac{\delta Vo}{\delta y}">
+
+2. Solve the pressure by the introduction of Euler discretization in time and the continuity condition, which leads to the Poisson's equation with Null Neumann Boundary Conditions:
+
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial P^2}{\partial^{2} x} + \frac{\partial P^{2}}{\partial^{2} y} = -\frac{\Delta t}{\rho} \left( \frac{\partial Up}{\partial x} + \frac{\partial Vp}{\partial y}\right)">
+
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial P}{\partial n} = 0">
+
+The discretization is performed through centered second order derivatives for both the second derivatives of the pressure and first derivatives of Up and Vp.
+
+This configuration leads to a singular system of equation, which has solution only if a certain compatibility condition is met. To ensure it, the regularization method is used (./papers/posrikidiz2001).
+
+Since the zeroth singular eigenvector of the adjoint matrix of the system is needed for the regularization methodology, this is computed previously with the Inverse Power Method and Conjugate Gradient method under a certain initial guess (to ensure convergence always, since the matrix is not fully symmetric, but almost).
+
+Thereafter the system of equations is solved with Succesive Over-Relaxation method (the most computationally expensive step, tipically arround 250 iterations), once the pressure is solved, the result of this step (Upp, Vpp) is computed through:
+
+<img src="https://latex.codecogs.com/gif.latex?Upp = Up + \frac{\Delta t}{\rho} \frac{\partial P}{\partial x}">
+
+<img src="https://latex.codecogs.com/gif.latex?Vpp = Vp + \frac{\Delta t}{\rho} \frac{\partial P}{\partial y}">
+
+The derivatives of the pressure are computed with second order centered scheme. Upp and Vpp already fit continuity condition.
+
+3. Solve the diffusion step with second order centered schemes for second derivatives and backward Euler in time (which means implicit).
+
+<img src="https://latex.codecogs.com/gif.latex?\frac{U - Upp}{\Delta t} = \nu \left( \frac{\partial U^{2}}{\partial^{2} x} + \frac{\partial U^{2}}{\partial^{2} y}\right)">
+
+<img src="https://latex.codecogs.com/gif.latex?\frac{V - Vpp}{\Delta t} = \nu \left( \frac{\partial V^{2}}{\partial^{2} x} + \frac{\partial V^{2}}{\partial^{2} y}\right)">
+
+The system of equations is solved with Conjugate Gradient Method (typically arround 15 iterations per U and per V). 
+
 ## Folder Contents
 
 ./bin/ --> Executable file
 
-./liquid/ --> Boundary and initial condition files (Developing stage)
+./liquid/ --> Boundary and initial condition files (Fully functional)
 
 ./matlab/ --> Matlab Files (main = Solver_PF.m)
 
