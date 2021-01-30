@@ -73,7 +73,13 @@ Default initial condition is U=0 and V=0 in whole domain, and U=1.0 in the top b
 Boundary and initial condition options are now Fully Functional, and these were tested with a wide range of combinations.
 
 <p align="center">
-  <img src="./images/cavity.gif" width="350" title="Variable Top Boundary Condition">
+  <img src="./images/u_vel.gif" width="350" title="Velocity in X">
+  <img src="./images/v_vel.gif" width="350" title="Velocity in Y">
+</p>
+
+<p align="center">
+  <img src="./images/u_mag.gif" width="350" title="Velocity Magnitude">
+  <img src="./images/pressure.gif" width="350" title="Pressure">
 </p>
 
 ## Brief Physical and Numerical Theory

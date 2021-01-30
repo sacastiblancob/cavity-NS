@@ -303,8 +303,8 @@
             RHSV(J) = 3*(AV(J+1)-AV(J)) - 3*(AV(J)-AV(J-1))
           ENDIF
         ENDDO
-        CALL CSC_CG(MS,RHSU,CU,1000,NIU,TOLU,11)
-        CALL CSC_CG(MS,RHSV,CV,1000,NIV,TOLV,11)
+        CALL CSC_CG(MS,RHSU,CU,2000,NIU,TOLU,11)
+        CALL CSC_CG(MS,RHSV,CV,2000,NIV,TOLV,11)
         ! ! !WRITE(*,*) 'NIU ',NIU
         ! ! !WRITE(*,*) 'NIV ',NIV
         ! ! !WRITE(*,*) 'CU ',CU

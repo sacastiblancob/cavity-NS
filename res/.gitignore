@@ -1,0 +1,5 @@
+# Ignoring swap files
+*.swp
+# Ignoring result files .dat
+*.dat
+#
