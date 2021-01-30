@@ -80,23 +80,34 @@ Boundary and initial condition options are now Fully Functional, and these were 
 
 Navier-Stokes Equations:
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20u_{i}}{\partial%20t}%20+%20u_{j}\frac{\partial%20u_{i}}{\partial%20x_{j}}=%20\frac{1}{\rho}%20\frac{\partial%20P}{\partial%20x_{i}}%20+%20\nu\frac{\partial^2%20u_{i}}{\partial%20x_{i}%20\partial%20x_{j}}%20+%20F_{i}">
+</p>
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20u_{i}}{\partial%20x_{i}}%20=%200">
+</p>
 
 The strategy to solve them is Fractional Steps:
 
 1. Solve the advection step with second order upwind scheme in space and forward Euler in time (which means explicit).
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?Up_{i}%20=%20Uo_{i}%20-%20\Delta%20t%20Uo%20\frac{\partial%20Uo}{\partial%20x}%20-%20\Delta%20t%20Vo%20\frac{\partial%20Uo}{\partial%20y}">
+</p>
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?Vp_{i}%20=%20Vo_{i}%20-%20\Delta%20t%20Uo%20\frac{\partial%20Vo}{\partial%20x}%20-%20\Delta%20t%20Vo%20\frac{\partial%20Vo}{\partial%20y}">
+</p>
 
 2. Solve the pressure by the introduction of Euler discretization in time and the continuity condition, which leads to the Poisson's equation with Null Neumann Boundary Conditions:
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?\frac{\partial^2%20P}{\partial%20x^{2}}%20+%20\frac{\partial^{2}%20P}{\partial%20y^{2}}%20=%20-\frac{\Delta%20t}{\rho}%20\left(%20\frac{\partial%20Up}{\partial%20x}%20+%20\frac{\partial%20Vp}{\partial%20y}\right)">
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20P}{\partial%20\overrightarrow{n}}%20=%200">
+</p>
 
 The discretization is performed through centered second order derivatives for both the second derivatives of the pressure and first derivatives of Up and Vp.
 
@@ -106,17 +117,25 @@ Since the zeroth singular eigenvector of the adjoint matrix of the system is nee
 
 Thereafter the system of equations is solved with Succesive Over-Relaxation method (the most computationally expensive step, tipically arround 250 iterations), once the pressure is solved, the result of this step (Upp, Vpp) is computed through:
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?Upp%20=%20Up%20+%20\frac{\Delta%20t}{\rho}%20\frac{\partial%20P}{\partial%20x}">
+</p>
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?Vpp%20=%20Vp%20+%20\frac{\Delta%20t}{\rho}%20\frac{\partial%20P}{\partial%20y}">
+</p>
 
 The derivatives of the pressure are computed with second order centered scheme. Upp and Vpp already fit continuity condition.
 
 3. Solve the diffusion step with second order centered schemes for second derivatives and backward Euler in time (which means implicit).
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?\frac{U%20-%20Upp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial^{2}%20U}{\partial%20x^{2}}%20+%20\frac{\partial^{2}%20U}{\partial%20y^{2}}\right)">
+</p>
 
+<p align="center">
 <img src="https://latex.codecogs.com/gif.latex?\frac{V%20-%20Vpp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial^{2}%20V}{\partial%20x^{2}}%20+%20\frac{\partial^{2}%20V}{\partial%20y^{2}}\right)">
+</p>
 
 The system of equations is solved with Conjugate Gradient Method (typically arround 15 iterations per U and per V). 
 
