@@ -100,7 +100,7 @@ The strategy to solve them is Fractional Steps:
 
 The discretization is performed through centered second order derivatives for both the second derivatives of the pressure and first derivatives of Up and Vp.
 
-This configuration leads to a singular system of equation, which has solution only if a certain compatibility condition is met. To ensure it, the regularization method is used (./papers/posrikidiz2001).
+This configuration leads to a singular system of equation, which has solution only if a certain compatibility condition is met. To ensure it, the regularization method is used (./papers/pozrikidis2001).
 
 Since the zeroth singular eigenvector of the adjoint matrix of the system is needed for the regularization methodology, this is computed previously with the Inverse Power Method and Conjugate Gradient method under a certain initial guess (to ensure convergence always, since the matrix is not fully symmetric, but almost).
 
