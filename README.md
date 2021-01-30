@@ -5,11 +5,11 @@
 
 With Fortran - GNU-Fortran compiler (and Matlab originals).
 
-Most relevant things in this solver are the Compressed Sparse Column (CSC) tools developed.
+And Compressed Sparse Column (CSC) storage, and a set of tools developed to work with it.
 
 <!--![plot](./images/cavity.png)-->
 <p align="center">
-  <img src="./images/cavity.png" width="450" title="Velocities Field">
+  <img src="./images/cavity.png" width="600" title="Velocities Field">
 </p>
 
 ## Installation
@@ -47,7 +47,7 @@ Printed Variables: Coordinates, Velocity in X direction (U), Velocity in Y direc
 To change top boundary condition input, you should enable the logical ISBOUND in the configuration file "nsconf.nml", and introuduce the path to your boundary condition file in the configuration variable BOUNDFILE, example:
 
 ```sh
-BOUNDFILE = './liquid/liquid_boundary.txt
+BOUNDFILE = './liquid/liquid_boundary.txt'
 ```
 
 You should keep the format of the examples, you can use the file "./liquid/sample_boundary.ods" to create your own top boundary condition over time: two first rows are reserved for variable names and units, the first column is reserved for time (in seconds) and the next 22 columns for the values of velocity in X (U) and velocity in Y (V). The location of these velocities are shown in the next image.
@@ -61,7 +61,7 @@ The values of the given boundary condition will be interpolated into the grid th
 You can also give a text file with initial condition, enable the logical ISSTART in the "nsconf.nml" file, and introduce the path to your initial condition file in the configuration variable STARTFILE:
 
 ```sh
-STARTFILE = './liquid/hot_start.dat
+STARTFILE = './liquid/hot_start.dat'
 ```
 
 This initial condition file should have the same format as the result files stored in "./res/" folder, after run your simulation; so the best way to create an initial condition is by running once the simulation with default initial condition.
