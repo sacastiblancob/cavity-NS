@@ -9,7 +9,7 @@ Most relevant things in this solver are the Compressed Sparse Column (CSC) tools
 
 <!--![plot](./images/cavity.png)-->
 <p align="center">
-  <img src="./images/cavity.png" width="350" title="Velocities Field">
+  <img src="./images/cavity.png" width="450" title="Velocities Field">
   <img src="./images/cavity.gif" width="350" title="Variable Top Boundary Condition">
 </p>
 
@@ -54,7 +54,7 @@ BOUNDFILE = './liquid/liquid_boundary.txt
 You should keep the format of the examples, you can use the file "./liquid/sample_boundary.ods" to create your own top boundary condition over time: two first rows are reserved for variable names and units, the first column is reserved for time (in seconds) and the next 22 columns for the values of velocity in X (U) and velocity in Y (V). The location of these velocities are shown in the next image.
 
 <p align="center">
-  <img src="./images/boundary_condition.png" width="350" title="Boundary Condition">
+  <img src="./images/boundary_condition.PNG" width="350" title="Boundary Condition">
 </p>
 
 The values of the given boundary condition will be interpolated into the grid through cubic spline interpolation method (to ensure smooth changes in the space), and it will have linear interpolation in time.
@@ -85,15 +85,15 @@ The strategy to solve them is Fractional Steps:
 
 1. Solve the advection step with second order upwind scheme in space and forward Euler in time (which means explicit).
 
-<img src="https://latex.codecogs.com/gif.latex?Up_{i} = Uo_{i} - \Delta t Uo \frac{\delta Uo}{\delta x} - \Delta t Vo \frac{\delta Uo}{\delta y}">
+<img src="https://latex.codecogs.com/gif.latex?Up_{i}%20=%20Uo_{i}%20-%20\Delta%20t%20Uo%20\frac{\partial%20Uo}{\partial%20x}%20-%20\Delta%20t%20Vo%20\frac{\partial%20Uo}{\partial%20y}">
 
-<img src="https://latex.codecogs.com/gif.latex?Vp_{i} = Vo_{i} - \Delta t Uo \frac{\delta Vo}{\delta x} - \Delta t Vo \frac{\delta Vo}{\delta y}">
+<img src="https://latex.codecogs.com/gif.latex?Vp_{i}%20=%20Vo_{i}%20-%20\Delta%20t%20Uo%20\frac{\partial%20Vo}{\partial%20x}%20-%20\Delta%20t%20Vo%20\frac{\partial%20Vo}{\partial%20y}">
 
 2. Solve the pressure by the introduction of Euler discretization in time and the continuity condition, which leads to the Poisson's equation with Null Neumann Boundary Conditions:
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial P^2}{\partial^{2} x} + \frac{\partial P^{2}}{\partial^{2} y} = -\frac{\Delta t}{\rho} \left( \frac{\partial Up}{\partial x} + \frac{\partial Vp}{\partial y}\right)">
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20P^2}{\partial^{2}%20x}%20+%20\frac{\partial%20P^{2}}{\partial^{2}%20y}%20=%20-\frac{\Delta%20t}{\rho}%20\left(%20\frac{\partial%20Up}{\partial%20x}%20+%20\frac{\partial%20Vp}{\partial%20y}\right)">
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{\partial P}{\partial n} = 0">
+<img src="https://latex.codecogs.com/gif.latex?\frac{\partial%20P}{\partial%20\overrightarrow{n}}%20=%200">
 
 The discretization is performed through centered second order derivatives for both the second derivatives of the pressure and first derivatives of Up and Vp.
 
@@ -103,17 +103,17 @@ Since the zeroth singular eigenvector of the adjoint matrix of the system is nee
 
 Thereafter the system of equations is solved with Succesive Over-Relaxation method (the most computationally expensive step, tipically arround 250 iterations), once the pressure is solved, the result of this step (Upp, Vpp) is computed through:
 
-<img src="https://latex.codecogs.com/gif.latex?Upp = Up + \frac{\Delta t}{\rho} \frac{\partial P}{\partial x}">
+<img src="https://latex.codecogs.com/gif.latex?Upp%20=%20Up%20+%20\frac{\Delta%20t}{\rho}%20\frac{\partial%20P}{\partial%20x}">
 
-<img src="https://latex.codecogs.com/gif.latex?Vpp = Vp + \frac{\Delta t}{\rho} \frac{\partial P}{\partial y}">
+<img src="https://latex.codecogs.com/gif.latex?Vpp%20=%20Vp%20+%20\frac{\Delta%20t}{\rho}%20\frac{\partial%20P}{\partial%20y}">
 
 The derivatives of the pressure are computed with second order centered scheme. Upp and Vpp already fit continuity condition.
 
 3. Solve the diffusion step with second order centered schemes for second derivatives and backward Euler in time (which means implicit).
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{U - Upp}{\Delta t} = \nu \left( \frac{\partial U^{2}}{\partial^{2} x} + \frac{\partial U^{2}}{\partial^{2} y}\right)">
+<img src="https://latex.codecogs.com/gif.latex?\frac{U%20-%20Upp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial%20U^{2}}{\partial^{2}%20x}%20+%20\frac{\partial%20U^{2}}{\partial^{2}%20y}\right)">
 
-<img src="https://latex.codecogs.com/gif.latex?\frac{V - Vpp}{\Delta t} = \nu \left( \frac{\partial V^{2}}{\partial^{2} x} + \frac{\partial V^{2}}{\partial^{2} y}\right)">
+<img src="https://latex.codecogs.com/gif.latex?\frac{V%20-%20Vpp}{\Delta%20t}%20=%20\nu%20\left(%20\frac{\partial%20V^{2}}{\partial^{2}%20x}%20+%20\frac{\partial%20V^{2}}{\partial^{2}%20y}\right)">
 
 The system of equations is solved with Conjugate Gradient Method (typically arround 15 iterations per U and per V). 
 
