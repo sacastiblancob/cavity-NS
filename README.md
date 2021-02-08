@@ -26,7 +26,7 @@ make clean; make
 
 ## Usage example
 
-To run the solver you should have a Fotran compiler (if possible use GNU-Fortran!!), change in the Makefile the lines related with the compiler and user specific configuration (the actual version works perfectly with Gfortran).
+To run the solver you should have a Fortran compiler (if possible use GNU-Fortran!!), change in the Makefile the lines related with the compiler and user specific configuration (the actual version works perfectly with Gfortran).
 
 Once the Makefile is modified (if you need to), you should compile it by typing the make clean and make commands. The .out executable file will be located in the ./bin/ folder.
 
@@ -165,7 +165,7 @@ The system of equations is solved with Conjugate Gradient Method (typically arro
 
 ./res/ --> Solver results(.dat files)
 
-./src/ --> Fotran source codes
+./src/ --> Fortran source codes
 
 ./nsconf.nml --> Configuration file (change input variables here)
 
