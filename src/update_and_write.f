@@ -2,7 +2,7 @@
                   SUBROUTINE UPDATE_AND_WRITE
 !                 ***************************
      & (X,Y,U,V,PP,UO,VO,T,TI,NTIME,WTIME,NITS,NTIDX,NTIDY,
-     &    TOLSOR,TOLCG,WTI,RE)
+     &    TOLSOR,TOLCG,WTI,RE,CPUTINIT)
 !
 !***********************************************************************
 ! 2D-NAVIER-STOKES SOLVER - FINITE DIFFERENCES
@@ -30,6 +30,7 @@
 !| TOLCG     |-->| GIVEN CG SOLVER TOLERANCE                           |
 !| WTI       |-->| HANDLING WRITE TIME                                 |
 !| RE        |-->| REYNOLDS NUMBER                                     |
+!| CPUTINIT  |-->| CPU INITAL TIME                                     |
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE DECLARATIONS_NUMERICAL, ONLY:NX,NY,NT,DT
@@ -44,7 +45,7 @@
       DOUBLE PRECISION, INTENT(IN), DIMENSION(NT) :: T
       INTEGER, INTENT(IN) :: TI
       DOUBLE PRECISION, INTENT(INOUT) :: NTIME
-      DOUBLE PRECISION, INTENT(IN) :: WTIME
+      DOUBLE PRECISION, INTENT(IN) :: WTIME, CPUTINIT
       INTEGER, INTENT(IN) :: NITS,NTIDX,NTIDY
       DOUBLE PRECISION, INTENT(IN) :: TOLSOR,TOLCG,RE
       INTEGER, INTENT(INOUT) :: WTI
@@ -52,7 +53,7 @@
 ! IN SUBROUTINE VARIABLES
 !
       INTEGER :: I,J,K
-      DOUBLE PRECISION :: C1,C2,C3,C4,C5,C6
+      DOUBLE PRECISION :: C1,C2,C3,C4,C5,C6,CPUT
       CHARACTER(LEN=80) :: FOUT
       CHARACTER(LEN=9)  :: FMT2
       CHARACTER(LEN=34) :: FSPEC
@@ -118,11 +119,15 @@
 !  WRITING IF IS TIME TO WRITE
 !
         IF((T(TI).GT.(NTIME-EPSI)).OR.(T(TI).EQ.T(NT))) THEN
+!
+! COMPUTING CPU TIME
+          CALL CPU_TIME(CPUT)        
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ! WRITING IN TERMINAL
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
           WRITE(*,*) REPEAT('~',72)
           WRITE(*,*) 'TIME: ',T(TI),'(s)'
+          WRITE(*,*) 'SIMULATION TIME: ',CPUT-CPUTINIT,'(s)'
           WRITE(*,*) 'TIME STEP: ',TI,' OF ',SIZE(T)
           WRITE(*,*) 'TIME STEP VALUE: ',DT
           WRITE(*,*) 'REYNOLDS NUMBER: ',RE

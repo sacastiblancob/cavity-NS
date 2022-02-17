@@ -1,7 +1,7 @@
 !                   *******************************
                     SUBROUTINE POINT_REGULARIZATION
 !                   *******************************
-     & (SING,TOLSING,MNITERM,W,ISUSERW,LM,LPM,LQM,UL,VL,RM)
+     & (SING,TOLSING,MNITERM,W,LM,LPM,LQM,UL,VL,RM)
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !***********************************************************************
@@ -14,6 +14,8 @@
 !history  Sergio Castiblanco
 !+        25/01/2021
 !+        Translation for original Matlab implementation
+!+        16/02/2022
+!+        Removing varible ISUSERW, not needed anymore
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,7 +23,6 @@
 !| TOLSING   |-->| TOLERANCE FOR INVERSE POWER METHOD SOLVER           |
 !| MNITERM   |-->| MAXIMUM NUMBER OF ITERATIONS FOR IPM SOLVER         |
 !| W         |<->| SOR OVER RELAXATION COEFFICIENT                     |
-!| ISUSERW   |-->| LOGICAL FOR SOR OVER RELAXATION COEFFICIENT         |
 !| ML        |-->| LAPLACIAN MATRIX                                    |
 !| MLP       |<->| P MATRIX FOR SOR SOLVER                             |
 !| MLQ       |<->| Q MATRIX FOR SOR SOLVER                             |
@@ -41,7 +42,6 @@
       INTEGER, INTENT(IN) :: SING, MNITERM
       DOUBLE PRECISION, INTENT(IN) :: TOLSING
       DOUBLE PRECISION, INTENT(INOUT) :: W
-      LOGICAL, INTENT(IN) :: ISUSERW
       TYPE(CSC_OBJ), INTENT(IN) :: LM
       TYPE(CSC_OBJ), INTENT(INOUT) :: LPM, LQM
       DOUBLE PRECISION, DIMENSION(NX*NY), INTENT(INOUT) :: UL
@@ -70,10 +70,8 @@
 ! COMPUTING OVER-RELAXATION COEFFICIENT
 !
       IF(DEBUG) WRITE(*,*) 'COMPUTING W'
-      IF(.NOT.ISUSERW) THEN
-        W = 13.4523570058092D0 * EXP(-0.206450260650164D0 * 
+      W = 13.4523570058092D0 * EXP(-0.206450260650164D0 * 
      &    (NX*NY)**(-0.434163866503769D0)) - 11.4497834449085D0
-      ENDIF
       WRITE(*,*) REPEAT('~',72)
       WRITE(*,*) 'SOR OVER-RELAXATION COEFFICIENT :',W
       WRITE(*,*) REPEAT('~',72)
