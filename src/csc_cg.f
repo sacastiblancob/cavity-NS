@@ -68,13 +68,12 @@
         ALF = (DOT_PRODUCT(RO,RO))/(DOT_PRODUCT(D,AD))
         !UPDATING XV
         XV = XV + (ALF*D)
-        !CHECKING CONVERGENCE
-        CALL CSC_MMATVEC(MA,XV,DUMV,NE)
-        IF((NORM2(BV - DUMV)).LT.TOL) THEN
-          EXIT
-        ENDIF
         !R
         R = RO - (ALF*AD)
+        !CHECKING CONVERGENCE
+        IF(NORM2(R).LT.TOL)THEN
+          EXIT
+        ENDIF
         !BET
         BET = (DOT_PRODUCT(R,R))/(DOT_PRODUCT(RO,RO))
         !UPDATING D
@@ -84,7 +83,7 @@
       ENDDO
 !
 !  NITER
-      NITER = IT - 1
+      NITER = IT
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !

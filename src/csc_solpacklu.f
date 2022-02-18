@@ -1,7 +1,7 @@
 !                   ************************
                     SUBROUTINE CSC_SOLPACKLU
 !                   ************************
-     & (N,M,LUV,LUR,LUC,VB,VX)
+     & (N,M,NZ,LUV,LUR,LUC,VB,VX)
 !
 !***********************************************************************
 ! CSC PACKAGE - SERGIO CASTIBLANCO

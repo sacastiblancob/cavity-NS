@@ -50,7 +50,7 @@
 !
 ! SEARCHING AND STORING DIAGONAL ELEMENTS
 !
-      M = MA%M
+      M = MA%NC
       DO J=1,M
         DO I=MA%C(J),(MA%C(J+1)-1)
           IF(MA%R(I).EQ.J)THEN
