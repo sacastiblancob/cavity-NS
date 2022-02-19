@@ -55,13 +55,22 @@ SRCPONS = $(SRCDIR)/point_ns.f
 SRCLECB = $(SRCDIR)/lecbound.f
 SRCALLC = $(SRCDIR)/all_csc.f
 SRCDIAG = $(SRCDIR)/csc_diag.f
+SRCDIAA = $(SRCDIR)/csc_diaga.f
 SRCKRON = $(SRCDIR)/csc_kron.f
 SRCSUMC = $(SRCDIR)/csc_sum.f
 SRCTRAN = $(SRCDIR)/csc_trans.f
 SRCPSOR = $(SRCDIR)/csc_presor.f
 SRCCMMV = $(SRCDIR)/csc_mmatvec.f
+SRCPCSO = $(SRCDIR)/csc_preconSSOR.f
+SRCPCIL = $(SRCDIR)/csc_preconilu0.f
+SRCSPLU = $(SRCDIR)/csc_solpacklu.f
+SRCHOUV = $(SRCDIR)/householderv.f
+SRCARHO = $(SRCDIR)/csc_arnoldihouse.f
 SRCCCGS = $(SRCDIR)/csc_cg.f
 SRCSORS = $(SRCDIR)/csc_sor.f
+SRCPCGM = $(SRCDIR)/csc_pcg.f
+SRCBICG = $(SRCDIR)/csc_bicgstab.f
+SRCGMRE = $(SRCDIR)/csc_gmres.f
 SRCDIFF = $(SRCDIR)/diffusion_matrix.f
 SRCLAPL = $(SRCDIR)/laplacian_matrix.f
 SRCPREG = $(SRCDIR)/point_regularization.f
@@ -84,13 +93,22 @@ OBJPONS = $(OBJDIR)/point_ns.o
 OBJLECB = $(OBJDIR)/lecbound.o
 OBJALLC = $(OBJDIR)/all_csc.o
 OBJDIAG = $(OBJDIR)/csc_diag.o
+OBJDIAA = $(OBJDIR)/csc_diaga.o
 OBJKRON = $(OBJDIR)/csc_kron.o
 OBJSUMC = $(OBJDIR)/csc_sum.o
 OBJTRAN = $(OBJDIR)/csc_trans.o
 OBJPSOR = $(OBJDIR)/csc_presor.o
 OBJCMMV = $(OBJDIR)/csc_mmatvec.o
+OBJPCSO = $(OBJDIR)/csc_preconSSOR.o
+OBJPCIL = $(OBJDIR)/csc_preconilu0.o
+OBJSPLU = $(OBJDIR)/csc_solpacklu.o
+OBJHOUV = $(OBJDIR)/householderv.o
+OBJARHO = $(OBJDIR)/csc_arnoldihouse.o
 OBJCCGS = $(OBJDIR)/csc_cg.o
 OBJSORS = $(OBJDIR)/csc_sor.o
+OBJPCGM = $(OBJDIR)/csc_pcg.o
+OBJBICG = $(OBJDIR)/csc_bicgstab.o
+OBJGMRE = $(OBJDIR)/csc_gmres.o
 OBJDIFF = $(OBJDIR)/diffusion_matrix.o
 OBJLAPL = $(OBJDIR)/laplacian_matrix.o
 OBJPREG = $(OBJDIR)/point_regularization.o
@@ -102,9 +120,11 @@ OBJUPDA = $(OBJDIR)/update_and_write.o
 OBJKILL = $(OBJDIR)/killemall.o
 #
 OBJECTS = $(OBJDCSC) $(OBJCSCS) $(OBJPHYS) $(OBJNUME) $(OBJWRHE) \
-			   	$(OBJPONS) $(OBJLECB) $(OBJALLC) $(OBJDIAG) $(OBJKRON) \
-					$(OBJSUMC) $(OBJTRAN) $(OBJPSOR) $(OBJCMMV) $(OBJCCGS) \
-					$(OBJSORS) $(OBJDIFF) $(OBJLAPL) $(OBJPREG) $(OBJDIV2) \
+			   	$(OBJPONS) $(OBJLECB) $(OBJALLC) $(OBJDIAG) $(OBJDIAA) \
+				 	$(OBJKRON) $(OBJSUMC) $(OBJTRAN) $(OBJPSOR) $(OBJCMMV) \
+					$(OBJPCSO) $(OBJPCIL) $(OBJSPLU) $(OBJHOUV) $(OBJARHO) \
+				 	$(OBJCCGS) $(OBJSORS) $(OBJPCGM) $(OBJBICG) $(OBJGMRE) \
+					$(OBJDIFF) $(OBJLAPL) $(OBJPREG) $(OBJDIV2) \
 					$(OBJGRA2) $(OBJPOIS) $(OBJDSOL) $(OBJUPDA) $(OBJKILL) \
 				 	$(OBJMAIN)
 #
@@ -156,6 +176,9 @@ $(OBJALLC): $(SRCALLC)
 $(OBJDIAG): $(SRCDIAG)
 	    $(FC) $(CFLAGS) $(SRCDIAG) -o $(OBJDIAG)
 
+$(OBJDIAA): $(SRCDIAA)
+	    $(FC) $(CFLAGS) $(SRCDIAA) -o $(OBJDIAA)
+
 $(OBJKRON): $(SRCKRON)
 	    $(FC) $(CFLAGS) $(SRCKRON) -o $(OBJKRON)
 
@@ -171,11 +194,35 @@ $(OBJPSOR): $(SRCPSOR)
 $(OBJCMMV): $(SRCCMMV)
 	    $(FC) $(CFLAGS) $(SRCCMMV) -o $(OBJCMMV)
 
+$(OBJPCSO): $(SRCPCSO)
+	    $(FC) $(CFLAGS) $(SRCPCSO) -o $(OBJPCSO)
+
+$(OBJPCIL): $(SRCPCIL)
+	    $(FC) $(CFLAGS) $(SRCPCIL) -o $(OBJPCIL)
+
+$(OBJSPLU): $(SRCSPLU)
+	    $(FC) $(CFLAGS) $(SRCSPLU) -o $(OBJSPLU)
+
+$(OBJHOUV): $(SRCHOUV)
+	    $(FC) $(CFLAGS) $(SRCHOUV) -o $(OBJHOUV)
+
+$(OBJARHO): $(SRCARHO)
+	    $(FC) $(CFLAGS) $(SRCARHO) -o $(OBJARHO)
+
 $(OBJCCGS): $(SRCCCGS)
 	    $(FC) $(CFLAGS) $(SRCCCGS) -o $(OBJCCGS)
 
 $(OBJSORS): $(SRCSORS)
 	    $(FC) $(CFLAGS) $(SRCSORS) -o $(OBJSORS)
+
+$(OBJPCGM): $(SRCPCGM)
+	    $(FC) $(CFLAGS) $(SRCPCGM) -o $(OBJPCGM)
+
+$(OBJBICG): $(SRCBICG)
+	    $(FC) $(CFLAGS) $(SRCBICG) -o $(OBJBICG)
+
+$(OBJGMRE): $(SRCGMRE)
+	    $(FC) $(CFLAGS) $(SRCGMRE) -o $(OBJGMRE)
 
 $(OBJDIFF): $(SRCDIFF)
 	    $(FC) $(CFLAGS) $(SRCDIFF) -o $(OBJDIFF)

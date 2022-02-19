@@ -1,7 +1,7 @@
 !                  ***************************
                    SUBROUTINE CSC_ARNOLDIHOUSE
 !                  ***************************
-     & (MA,VV,M,LUV,VD,PC,WH,VB)
+     & (MA,VVV,M,LUV,VD,PC,WH,VB)
 !
 !***********************************************************************
 ! CSC PACKAGE - SERGIO CASTIBLANCO
@@ -57,7 +57,7 @@
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !| MA       |-->| MATRIX A IN CSC STORAGE                              |
-!| VV       |-->| VECTOR FOR KRYLOV SUBSPACE K(MA,VV)_M                |
+!| VVV      |-->| VECTOR FOR KRYLOV SUBSPACE K(MA,VV)_M                |
 !| M        |-->| KRYLOV SUBSPACE SIZE                                 |
 !| LUV      |-->| LU DECOMPOSITION VALUES (FOR SSOR OR ILU0)           |
 !| VD       |-->| VECTOR WITH (ABS)DIAGONAL OF A (IF PC=1 OR PC=2)     |
@@ -75,7 +75,7 @@
 !
       TYPE(CSC_OBJ), INTENT(IN) :: MA
       INTEGER, INTENT(IN) :: M,PC
-      DOUBLE PRECISION, DIMENSION(MA%NR), INTENT(IN) :: VV
+      DOUBLE PRECISION, DIMENSION(MA%NR), INTENT(IN) :: VVV
       DOUBLE PRECISION, DIMENSION(MA%NC), INTENT(IN) :: VD
       DOUBLE PRECISION, DIMENSION(MA%NZ), INTENT(IN) :: LUV
       DOUBLE PRECISION, DIMENSION(MA%NR+1,M+1), INTENT(INOUT) :: WH
@@ -83,12 +83,13 @@
 !
 !  IN SUBROUTINE VARIABLES
 !
-      DOUBLE PRECISION, DIMENSION(MA%NR) :: VZ, VZAUX, VQ
+      DOUBLE PRECISION, DIMENSION(MA%NR) :: VZ,VZAUX,VZAUX2,VQ,VV
       DOUBLE PRECISION :: BQTW, BZTW
       INTEGER :: N,I,J,K
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
+      VV = VVV
 !-----------------------------------------------------------------------
 ! NO PRECONDITIONING
 !-----------------------------------------------------------------------
@@ -109,7 +110,7 @@
       IF(M.LT.N)THEN
       ! CASE WHEN M<N
 !
-      DO J=1:M+1
+      DO J=1,M+1
       ! COMPUTING H
       WH(1:J-1,J) = VZ(1:J-1)
       WH(J,J) = VZ(J) - VB(J)*(DOT_PRODUCT(VZ(J:N),WH(J+1:N+1,J)))
@@ -138,7 +139,7 @@
           DO I=K,N
             VZ(I) = VZAUX(I) - WH(I+1,K)*BZTW
           ENDDO
-          VZAUZ = VV
+          VZAUX = VV
         ENDDO
 !
       !COMPUTING NEW HOUSEHOLDER PROJECTOR VECTOR AND NEW BETA
@@ -150,7 +151,7 @@
       ELSE IF(M.EQ.N)THEN
       ! CASE WHEN M==N
 !
-      DO J=1:M+1
+      DO J=1,M+1
       ! COMPUTING H
       WH(1:J-1,J) = VZ(1:J-1)
 !
@@ -209,7 +210,7 @@
       IF(M.LT.N)THEN
       ! CASE WHEN M<N
 !
-      DO J=1:M+1
+      DO J=1,M+1
       ! COMPUTING H
       WH(1:J-1,J) = VZ(1:J-1)
       WH(J,J) = VZ(J) - VB(J)*(DOT_PRODUCT(VZ(J:N),WH(J+1:N+1,J)))
@@ -232,8 +233,8 @@
       !COMPUTING Z_J+1
       !Z_J+1 = PJ*PJ-1*PJ-2*...*P2*P1*(A*VV_J)
       !SUCCESIVE OUTER PRODUCTS BY LEFT SIDE
-        VZAUX = VV/VD    !RIGHT PRECONDITIONING
-        CALL CSC_MMATVEC(MA,VZAUX,VZAUX,N)
+        VZAUX2 = VV/VD    !RIGHT PRECONDITIONING
+        CALL CSC_MMATVEC(MA,VZAUX2,VZAUX,N)
         DO K=1,J
           BZTW = VB(K)*(DOT_PRODUCT(VZAUX(K:N),WH(K+1:N+1,K)))
           DO I=K,N
@@ -251,7 +252,7 @@
       ELSE IF(M.EQ.N)THEN
       ! CASE WHEN M==N
 !
-      DO J=1:M+1
+      DO J=1,M+1
       ! COMPUTING H
       WH(1:J-1,J) = VZ(1:J-1)
 !
@@ -274,8 +275,8 @@
       !COMPUTING Z_J+1
       !Z_J+1 = PJ*PJ-1*PJ-2*...*P2*P1*(A*VV_J)
       !SUCCESIVE OUTER PRODUCTS BY LEFT SIDE
-        VZAUX = VV/VD    !RIGTH PRECONDITIONING
-        CALL CSC_MMATVEC(MA,VZAUX,VZAUX,N)
+        VZAUX2 = VV/VD    !RIGTH PRECONDITIONING
+        CALL CSC_MMATVEC(MA,VZAUX2,VZAUX,N)
         DO K=1,J
           BZTW = VB(K)*(DOT_PRODUCT(VZAUX(K:N),WH(K+1:N+1,K)))
           DO I=K,N
@@ -311,7 +312,7 @@
       IF(M.LT.N)THEN
       ! CASE WHEN M<N
 !
-      DO J=1:M+1
+      DO J=1,M+1
       ! COMPUTING H
       WH(1:J-1,J) = VZ(1:J-1)
       WH(J,J) = VZ(J) - VB(J)*(DOT_PRODUCT(VZ(J:N),WH(J+1:N+1,J)))
@@ -334,8 +335,8 @@
       !COMPUTING Z_J+1
       !Z_J+1 = PJ*PJ-1*PJ-2*...*P2*P1*(A*VV_J)
       !SUCCESIVE OUTER PRODUCTS BY LEFT SIDE
-        CALL CSC_SOLPACKLU(N,N,LUV,MA%R,MA%C,VV,VZAUX)
-        CALL CSC_MMATVEC(MA,VZAUX,VZAUX,N)
+        CALL CSC_SOLPACKLU(N,N,MA%NZ,LUV,MA%R,MA%C,VV,VZAUX2)
+        CALL CSC_MMATVEC(MA,VZAUX2,VZAUX,N)
         DO K=1,J
           BZTW = VB(K)*(DOT_PRODUCT(VZAUX(K:N),WH(K+1:N+1,K)))
           DO I=K,N
@@ -353,7 +354,7 @@
       ELSE IF(M.EQ.N)THEN
       ! CASE WHEN M==N
 !
-      DO J=1:M+1
+      DO J=1,M+1
       ! COMPUTING H
       WH(1:J-1,J) = VZ(1:J-1)
 !
@@ -376,8 +377,8 @@
       !COMPUTING Z_J+1
       !Z_J+1 = PJ*PJ-1*PJ-2*...*P2*P1*(A*VV_J)
       !SUCCESIVE OUTER PRODUCTS BY LEFT SIDE
-        CALL CSC_SOLPACKLU(N,N,LUV,MA%R,MA%C,VV,VZAUX)
-        CALL CSC_MMATVEC(MA,VZAUX,VZAUX,N)
+        CALL CSC_SOLPACKLU(N,N,MA%NZ,LUV,MA%R,MA%C,VV,VZAUX2)
+        CALL CSC_MMATVEC(MA,VZAUX2,VZAUX,N)
         DO K=1,J
           BZTW = VB(K)*(DOT_PRODUCT(VZAUX(K:N),WH(K+1:N+1,K)))
           DO I=K,N

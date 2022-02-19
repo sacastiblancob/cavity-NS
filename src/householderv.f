@@ -1,7 +1,7 @@
 !                   ***********************
                     SUBROUTINE HOUSEHOLDERV
 !                   ***********************
-     & (X,BETA,V,N)
+     & (VX,BETA,V,N)
 !
 !***********************************************************************
 ! CSC PACKAGE - SERGIO CASTIBLANCO
@@ -38,12 +38,13 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       INTEGER, INTENT(IN) :: N
-      DOUBLE PRECISION, DIMENSION(N), INTENT(IN) :: X
+      DOUBLE PRECISION, DIMENSION(N), INTENT(IN) :: VX
       DOUBLE PRECISION, DIMENSION(N), INTENT(INOUT) :: V
       DOUBLE PRECISION, INTENT(OUT) :: BETA
 !
 !  IN SUBROUTINE VARIABLES
 !
+      DOUBLE PRECISION, DIMENSION(N) :: X
       DOUBLE PRECISION :: SIG, MU, NX
       INTEGER :: I
 !
@@ -51,9 +52,12 @@
 !
 ! NORMALIZING TO AVOID OVERFLOW
       NX = NORM2(X)
-      DO I=1,N
-        X(I) = X(I)/NX
-      ENDDO
+      IF(NX.EQ.0.0D0)THEN
+        WRITE(*,*) "ERROR HOUSEHOLDERV, NORM(X)==0"
+        STOP 0
+      ENDIF
+      X = VX
+      X = X/NX
 !
       SIG = DOT_PRODUCT(X(2:N),X(2:N))
       V = 0.D0

@@ -1,7 +1,7 @@
 !                     ******************
                       SUBROUTINE CSC_PCG
 !                     ******************
-     & (MA,VB,VX,M,NITER,TOL,LUV,VD,PC,NT,RES)
+     & (MA,VB,VX,NITER,TOL,LUV,VD,PC,NT,RES)
 !
 !***********************************************************************
 ! CSC PACKAGE - SERGIO CASTIBLANCO
@@ -40,7 +40,6 @@
 !| MA       |-->| MATRIX A IN CSC STORAGE                              |
 !| VB       |-->| RIGTH HAND SIDE VECTOR                               |
 !| VX       |<->| SOLUTION VECTOR, AND INTIAL GUESS                    |
-!| M        |-->| KRYLOV SUBSPACE SIZE                                 |
 !| NITER    |-->| MAXIMUM NUMBER OF ITERATIONS                         |
 !| TOL      |-->| TOLERANCE FOR THE NORM OF RESIDUAL                   |
 !| LUV      |-->| LU DECOMPOSITION VALUES (FOR SSOR OR ILU0)           |
@@ -58,21 +57,21 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       TYPE(CSC_OBJ), INTENT(IN) :: MA
-      INTEGER, INTENT(IN) :: M,PC,NITER
+      INTEGER, INTENT(IN) :: PC,NITER
       INTEGER, INTENT(OUT) :: NT
       DOUBLE PRECISION, INTENT(IN) :: TOL
       DOUBLE PRECISION, INTENT(OUT) :: RES
       DOUBLE PRECISION, DIMENSION(MA%NR), INTENT(IN) :: VB
       DOUBLE PRECISION, DIMENSION(MA%NC), INTENT(IN) :: VD
       DOUBLE PRECISION, DIMENSION(MA%NZ), INTENT(IN) :: LUV
-      DOUBLE PRECISION, DIMENSION(MA%NR), INTENT(INOUT) :: VX
+      DOUBLE PRECISION, DIMENSION(MA%NC), INTENT(INOUT) :: VX
 !
 !  IN SUBROUTINE VARIABLES
 !
       DOUBLE PRECISION :: RR,A,B,RZ
-      DOUBLE PRECISION, DIMENSION(SIZE(VB)) :: VR,VP,VAP
-      DOUBLE PRECISION, ALLOCATABLE :: VZ
-      INTEGER :: N,T,NB
+      DOUBLE PRECISION, DIMENSION(MA%NR) :: VR,VP,VAP
+      DOUBLE PRECISION, ALLOCATABLE :: VZ(:)
+      INTEGER :: N,T,NB,SVB
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
@@ -116,7 +115,8 @@
       ELSE IF((PC.EQ.1).OR.(PC.EQ.2))THEN
 !
       !ALLOCATING VZ
-      ALLOCATE(VZ,SIZE(VB))
+      SVB = SIZE(VB)
+      ALLOCATE(VZ(SVB))
 !
       !RESIDUAL AND P-VECTOR
       CALL CSC_MMATVEC(MA,VX,VR,N)
@@ -148,7 +148,8 @@
       ELSE IF((PC.EQ.3).OR.(PC.EQ.4))THEN
 !
       !ALLOCATING VZ
-      ALLOCATE(VZ,SIZE(VB))
+      SVB = SIZE(VB)
+      ALLOCATE(VZ(SVB))
 !
       !RESIDUAL AND P-VECTOR
       CALL CSC_MMATVEC(MA,VX,VR,N)
@@ -159,7 +160,7 @@
       DO T=1,NITER
 !
         RZ = DOT_PRODUCT(VR,VZ)
-        CALL CSC_MATVEC(MA,VP,VAP,N)
+        CALL CSC_MMATVEC(MA,VP,VAP,N)
         A = RZ/DOT_PRODUCT(VAP,VP)
         VX = VX + A*VP
         VR = VR - A*VAP

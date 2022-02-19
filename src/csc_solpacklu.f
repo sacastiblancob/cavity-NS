@@ -45,8 +45,9 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       INTEGER, INTENT(IN) :: N,M,NZ
-      DOUBLE PRECISION, INTENT(IN), DIMENSION(NZ) :: LUV,LUR
-      DOUBLE PRECISION, INTENT(IN), DIMENSION(M+1) :: LUC
+      DOUBLE PRECISION, INTENT(IN), DIMENSION(NZ) :: LUV
+      INTEGER, INTENT(IN), DIMENSION(NZ) :: LUR
+      INTEGER, INTENT(IN), DIMENSION(M+1) :: LUC
       DOUBLE PRECISION, INTENT(IN), DIMENSION(N) :: VB
       DOUBLE PRECISION, INTENT(INOUT), DIMENSION(N) :: VX
 !
@@ -58,9 +59,7 @@
 !
 ! REPLACING VALUES OF VX WITH THOSE OF VB
 !
-      DO I=1,N
-        VX(I)=VB(I)
-      ENDDO
+      VX = VB
 !
 ! FORWARD SUBSTITUTION
 !
@@ -68,7 +67,7 @@
         DO I=LUC(J),(LUC(J+1)-LUC(1))
           IF(J.LT.LUR(I))THEN
             VX(LUR(I)) = VX(LUR(I)) - LUV(I)*VX(J)
-          ENDDO
+          ENDIF
         ENDDO
       ENDDO
 !

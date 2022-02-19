@@ -33,23 +33,24 @@
 !
 !  IN SUBROUTINE VARIABLES
 !
-      DOUBLE PRECISION, DIMENSION(MA%NZ) :: AV, AC, LUC
-      DOUBLE PRECISION, DIMENSION(MA%NR+1) :: AR
+      DOUBLE PRECISION, DIMENSION(MA%NZ) :: AV
+      INTEGER, DIMENSION(MA%NZ) :: AC, LUC
+      INTEGER, DIMENSION(MA%NR+1) :: AR
       INTEGER, DIMENSION(MA%NC) :: DIA, POINT
-      DOUBLE PRECISION, DIMENSION(MA%NC+1) :: LUR
+      INTEGER, DIMENSION(MA%NC+1) :: LUR
       INTEGER :: N,NZ,MH,I,IAA,IAB,J,JP,K,W,V
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 ! COMPUTING A TRANSPOSE, AND STORE RESULT IN CSR FORMAT IN AV,AC,AR
       AV = 0.D0
-      AC = 0.D0
-      AR = 0.D0
+      AC = 0
+      AR = 0
 !
       N = SIZE(MA%C)-1
       NZ = MA%C(N+1)-MA%C(1)
 !
-      MH = MAX(MA%R)+1
+      MH = MAXVAL(MA%R)+1
 !
       DO I=1,NZ
         J = MA%R(I)+2;
@@ -82,9 +83,7 @@
 !
 ! COMPUTING ILU0 FACTORIZATION (MITTAL & AL-KURDI, 2003)
 !
-      DO I=1,NZ
-        LUV(I) = AV(I)
-      ENDDO
+      LUV = AV
 !
       N = SIZE(AR)-1
       DIA = 0
@@ -123,14 +122,12 @@
       N = SIZE(AR)-1
       NZ = AR(N+1)-1
 !
-      LUC = 0.D0
-      LUR = 0.D0
-      DO I=1,NZ
-        AV(I)=LUV(I)
-      ENDDO
+      LUC = 0
+      LUR = 0
+      AV = LUV
       LUV = 0D0
 !
-      MH = MAX(AC)+1
+      MH = MAXVAL(AC)+1
 !
       DO I=1,NZ
         J = AC(I)+2;

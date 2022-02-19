@@ -1,7 +1,7 @@
 !                   ***********************
                     SUBROUTINE CSC_BICGSTAB
 !                   ***********************
-     & (MA,VB,VX,M,NITER,TOL,LUV,VD,PC,NT,RES)
+     & (MA,VB,VX,NITER,TOL,LUV,VD,PC,NT,RES)
 !
 !***********************************************************************
 ! CSC PACKAGE - SERGIO CASTIBLANCO
@@ -40,7 +40,6 @@
 !| MA       |-->| MATRIX A IN CSC STORAGE                              |
 !| VB       |-->| RIGTH HAND SIDE VECTOR                               |
 !| VX       |<->| SOLUTION VECTOR, AND INTIAL GUESS                    |
-!| M        |-->| KRYLOV SUBSPACE SIZE                                 |
 !| NITER    |-->| MAXIMUM NUMBER OF ITERATIONS                         |
 !| TOL      |-->| TOLERANCE FOR THE NORM OF RESIDUAL                   |
 !| LUV      |-->| LU DECOMPOSITION VALUES (FOR SSOR OR ILU0)           |
@@ -58,21 +57,21 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       TYPE(CSC_OBJ), INTENT(IN) :: MA
-      INTEGER, INTENT(IN) :: M,PC,NITER
+      INTEGER, INTENT(IN) :: PC,NITER
       INTEGER, INTENT(OUT) :: NT
       DOUBLE PRECISION, INTENT(IN) :: TOL
       DOUBLE PRECISION, INTENT(OUT) :: RES
       DOUBLE PRECISION, DIMENSION(MA%NR), INTENT(IN) :: VB
       DOUBLE PRECISION, DIMENSION(MA%NC), INTENT(IN) :: VD
       DOUBLE PRECISION, DIMENSION(MA%NZ), INTENT(IN) :: LUV
-      DOUBLE PRECISION, DIMENSION(MA%NR), INTENT(INOUT) :: VX
+      DOUBLE PRECISION, DIMENSION(MA%NC), INTENT(INOUT) :: VX
 !
 !  IN SUBROUTINE VARIABLES
 !
-      DOUBLE PRECISION :: RR,A,B,RZ
-      DOUBLE PRECISION, DIMENSION(SIZE(VB)) :: VR,VP,VAP,VR0,VS,VAS
-      DOUBLE PRECISION, ALLOCATABLE :: VPG,VSG
-      INTEGER :: N,T,NB
+      DOUBLE PRECISION :: A,B,W
+      DOUBLE PRECISION, DIMENSION(MA%NR) :: VR,VP,VAP,VR0,VS,VAS
+      DOUBLE PRECISION, ALLOCATABLE :: VPG(:),VSG(:)
+      INTEGER :: N,T,NB,SVB
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
@@ -120,8 +119,9 @@
       ELSE IF((PC.EQ.1).OR.(PC.EQ.2))THEN
 !
       !ALLOCATING VPG, VSG
-      ALLOCATE(VPG,SIZE(VB))
-      ALLOCATE(VSG,SIZE(VB))
+      SVB = SIZE(VB)
+      ALLOCATE(VPG(SVB))
+      ALLOCATE(VSG(SVB))
 !
       !RESIDUAL AND P-VECTOR
       CALL CSC_MMATVEC(MA,VX,VR,N)
@@ -157,8 +157,9 @@
       ELSE IF((PC.EQ.3).OR.(PC.EQ.4))THEN
 !
       !ALLOCATING VPG, VSG
-      ALLOCATE(VPG,SIZE(VB))
-      ALLOCATE(VSG,SIZE(VB))
+      SVB = SIZE(VB)
+      ALLOCATE(VPG(SVB))
+      ALLOCATE(VSG(SVB))
 !
       !RESIDUAL AND P-VECTOR
       CALL CSC_MMATVEC(MA,VX,VR,N)

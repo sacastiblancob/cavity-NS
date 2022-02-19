@@ -26,7 +26,7 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       TYPE(CSC_OBJ), INTENT(IN) :: MA
-      DOUBLE PRECISION, INTENT(INOUT) :: DA
+      DOUBLE PRECISION, DIMENSION(MA%NC), INTENT(INOUT) :: DA
 !
 !  IN SUBROUTINE VARIABLES
 !
@@ -34,28 +34,15 @@
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
-      ERR = 0
-!
-!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-!
-! ALLOCATING DIAGONAL VALUES VECTOR IF NOT
-!
-      IF(.NOT.ASSOCIATED(DA)) THEN
-        ALLOCATE(DA(MA%NZ),STAT=ERR)
-      ELSE
-        WRITE(*,*) 'DEALLOCATING AND REALLOCATING DA OF MA', MA%NAM
-        DEALLOCATE(DA)
-        ALLOCATE(DA(MA%NZ),STAT=ERR)
-      ENDIF
 !
 ! SEARCHING AND STORING DIAGONAL ELEMENTS
 !
       M = MA%NC
       DO J=1,M
-        DO I=MA%C(J),(MA%C(J+1)-1)
+        DO I=MA%C(J),(MA%C(J+1)-MA%C(1))
           IF(MA%R(I).EQ.J)THEN
             DA(J)=MA%V(I)
-          ENDDO
+          ENDIF
         ENDDO
       ENDDO
 !
