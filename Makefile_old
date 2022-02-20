@@ -73,8 +73,7 @@ SRCBICG = $(SRCDIR)/csc_bicgstab.f
 SRCGMRE = $(SRCDIR)/csc_gmres.f
 SRCDIFF = $(SRCDIR)/diffusion_matrix.f
 SRCLAPL = $(SRCDIR)/laplacian_matrix.f
-SRCPREC = $(SRCDIR)/preconditioning.f
-SRCPRER = $(SRCDIR)/pre_regularization.f
+SRCPREG = $(SRCDIR)/point_regularization.f
 SRCDIV2 = $(SRCDIR)/diver2d.f
 SRCGRA2 = $(SRCDIR)/grad2d.f
 SRCPOIS = $(SRCDIR)/poisson.f
@@ -112,8 +111,7 @@ OBJBICG = $(OBJDIR)/csc_bicgstab.o
 OBJGMRE = $(OBJDIR)/csc_gmres.o
 OBJDIFF = $(OBJDIR)/diffusion_matrix.o
 OBJLAPL = $(OBJDIR)/laplacian_matrix.o
-OBJPREC = $(OBJDIR)/preconditioning.o
-OBJPRER = $(OBJDIR)/pre_regularization.o
+OBJPREG = $(OBJDIR)/point_regularization.o
 OBJDIV2 = $(OBJDIR)/diverd2.o
 OBJGRA2 = $(OBJDIR)/grad2d.o
 OBJPOIS = $(OBJDIR)/poisson.o
@@ -126,7 +124,7 @@ OBJECTS = $(OBJDCSC) $(OBJCSCS) $(OBJPHYS) $(OBJNUME) $(OBJWRHE) \
 				 	$(OBJKRON) $(OBJSUMC) $(OBJTRAN) $(OBJPSOR) $(OBJCMMV) \
 					$(OBJPCSO) $(OBJPCIL) $(OBJSPLU) $(OBJHOUV) $(OBJARHO) \
 				 	$(OBJCCGS) $(OBJSORS) $(OBJPCGM) $(OBJBICG) $(OBJGMRE) \
-					$(OBJDIFF) $(OBJLAPL) $(OBJPREC) $(OBJPRER) $(OBJDIV2) \
+					$(OBJDIFF) $(OBJLAPL) $(OBJPREG) $(OBJDIV2) \
 					$(OBJGRA2) $(OBJPOIS) $(OBJDSOL) $(OBJUPDA) $(OBJKILL) \
 				 	$(OBJMAIN)
 #
@@ -232,11 +230,8 @@ $(OBJDIFF): $(SRCDIFF)
 $(OBJLAPL): $(SRCLAPL)
 	    $(FC) $(CFLAGS) $(SRCLAPL) -o $(OBJLAPL)
 
-$(OBJPREC): $(SRCPREC)
-	    $(FC) $(CFLAGS) $(SRCPREC) -o $(OBJPREC)
-
-$(OBJPRER): $(SRCPRER)
-	    $(FC) $(CFLAGS) $(SRCPRER) -o $(OBJPRER)
+$(OBJPREG): $(SRCPREG)
+	    $(FC) $(CFLAGS) $(SRCPREG) -o $(OBJPREG)
 
 $(OBJDIV2): $(SRCDIV2)
 	    $(FC) $(CFLAGS) $(SRCDIV2) -o $(OBJDIV2)

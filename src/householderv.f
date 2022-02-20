@@ -51,13 +51,12 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 ! NORMALIZING TO AVOID OVERFLOW
-      NX = NORM2(X)
+      NX = NORM2(VX)
       IF(NX.EQ.0.0D0)THEN
         WRITE(*,*) "ERROR HOUSEHOLDERV, NORM(X)==0"
         STOP 0
       ENDIF
-      X = VX
-      X = X/NX
+      X = VX/NX
 !
       SIG = DOT_PRODUCT(X(2:N),X(2:N))
       V = 0.D0

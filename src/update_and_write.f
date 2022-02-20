@@ -100,7 +100,7 @@
             C4 = VO(K)
             C5 = PP(K)
             C6 = SQRT(C3*C3 + C4*C4)
-            WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5, C6
+            WRITE(WTI,'(*(F18.8))') C1, C2, C3, C4, C5, C6
             K = K + 1
           ENDDO
         ENDDO
@@ -131,13 +131,13 @@
           WRITE(*,*) 'TIME STEP: ',TI,' OF ',SIZE(T)
           WRITE(*,*) 'TIME STEP VALUE: ',DT
           WRITE(*,*) 'REYNOLDS NUMBER: ',RE
-          WRITE(*,*) 'LAST SOR SOLVER TOL FOR THE RESIDUAL(POISSON): ' 
+          WRITE(*,*) 'LAST POISSON SOLVER TOL FOR THE RESIDUAL: ' 
           WRITE(*,*) TOLSOR
-          WRITE(*,*) 'LAST SOR SOLVER NUMBER OF ITERATIONS(POISSON): '
+          WRITE(*,*) 'LAST POISSON SOLVER NUMBER OF ITERATIONS: '
           WRITE(*,*) NITS
-          WRITE(*,*) 'LAST CG SOLVER TOL FOR THE RESIDUAL(DIFFUSION): ' 
+          WRITE(*,*) 'LAST DIFFUSION SOLVER TOL FOR THE RESIDUAL: ' 
           WRITE(*,*) TOLCG
-          WRITE(*,*) 'LAST CG SOLVER NUMBER OF ITERATIONS(DIFFUSION): '
+          WRITE(*,*) 'LAST DIFFUSION SOLVER NUMBER OF ITERATIONS: '
           WRITE(*,*) 'U: ',NTIDX,', V: ',NTIDY
           WRITE(*,*) 'WRITING FILE NUMBER: ', (WTI-10)
           WRITE(*,*) REPEAT('~',72)
@@ -169,7 +169,7 @@
               C4 = VO(K)
               C5 = PP(K)
               C6 = SQRT(C3*C3 + C4*C4)
-              WRITE(WTI,'(*(F14.8))') C1, C2, C3, C4, C5, C6
+              WRITE(WTI,'(*(F18.8))') C1, C2, C3, C4, C5, C6
               K = K + 1
             ENDDO
           ENDDO

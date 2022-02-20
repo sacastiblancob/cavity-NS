@@ -160,10 +160,10 @@
 !
 ! INITIAL CONDITION IF NO HOT START FILE
 !
-      UO = 0D0
-      VO = 0D0
-      P = 0D0
       IF(.NOT.ISSTART) THEN
+        UO = 0D0
+        VO = 0D0
+        P = 1D0
         DO I=1,SIZE(UPBOUND)
           UO(UPBOUND(I)) = 1.0D0
         ENDDO

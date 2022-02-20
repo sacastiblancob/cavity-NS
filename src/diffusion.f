@@ -1,9 +1,9 @@
 !                    ********************
                      SUBROUTINE DIFFUSION
 !                    ********************
-     & (U,V,UO,VO,UPP,VPP,SX,SY,KM,MNITERD,NTIDX,NTIDY,TOLCG,BOUND,
-     &  UPBOUND,DOBOUND,LEBOUND,RIBOUND,UPBOUNDI,DOBOUNDI,LEBOUNDI,
-     &  RIBOUNDI)
+     & (U,V,UO,VO,UPP,VPP,SX,SY,KM,PCD,LUVD,DKM,MNITERD,NTIDX,
+     &  NTIDY,TOLCG,BOUND,UPBOUND,DOBOUND,LEBOUND,RIBOUND,UPBOUNDI,
+     &  DOBOUNDI,LEBOUNDI,RIBOUNDI,FRESDX,FRESDY)
 !
 !***********************************************************************
 ! 2D-NAVIER STOKES SOLVER - FINITE DIFFERENCES
@@ -15,12 +15,18 @@
 !+        16/01/2021
 !+        TRANSLATION FOR ORIGINAL MATLAB IMPLEMENTATION
 !
+!+        20/02/2022
+!+        Update: adding new preconditioning options
+!
 !!~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !| U,V       |<->| U AND V SOLUTION OF THIRD FRACTIONAL STEP           |
 !| UO,VO     |<->| U AND V SOLUTION PREVIOUS TIME STEP, WITH NEW BOUND.|
 !| UPP,VPP   |-->| U AND V SOLUTION OF SECOND FRACTIONAL STEP          |
 !| SX,SY     |-->| DIFFUSIVITY DISCRETE COEFFICIENTS                   |
 !| KM        |-->| DIFFUSION MATRIX                                    |
+!| PCD       |-->| PRECONDITIONING OPTION FOR DIFFUSION                |
+!| LUVD      |-->| LU VALUES IF SSOR OR ILU(0) PRECON.                 |
+!| DKM       |-->| DIAGONAL ENTRIES OF KM IF (ABS)DIAG PRECON.         |
 !| MNITERD   |-->| MAXIMUM NUMBER OF ITERATIONS FOR CG SOLVER          |
 !| NTIDX,Y   |<->| NUMBER OF ITERATIONS TAKEN BY CG SOLVER             |
 !| TOLCG     |-->| TOLERANCE FOR THE RESIDUAL OF CG SOLVER             |
@@ -33,6 +39,7 @@
 !| DOBOUNDI  |-->| BOTTOM INTERNAL BOUNDARY INDICES                    |
 !| RIBOUNDI  |-->| RIGHT INTERNAL BOUNDARY INDICES                     |
 !| LEBOUNDI  |-->| LEFT INTERNAL BOUNDARY INDICES                      |
+!| FRESDX,Y  |<--| FINAL RESIDUALS OF DIFFUSION IN X AND Y             |
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE CSC_STORAGE
@@ -45,8 +52,11 @@
       DOUBLE PRECISION, DIMENSION(NX*NY), INTENT(IN) :: UPP,VPP,UO,VO
       DOUBLE PRECISION, INTENT(IN) :: SX,SY,TOLCG
       TYPE(CSC_OBJ), INTENT(IN) :: KM
-      INTEGER, INTENT(IN) :: MNITERD
+      DOUBLE PRECISION, DIMENSION(KM%NC), INTENT(IN) :: DKM
+      DOUBLE PRECISION, DIMENSION(KM%NZ), INTENT(IN) :: LUVD
+      INTEGER, INTENT(IN) :: MNITERD,PCD
       INTEGER, INTENT(OUT) :: NTIDX, NTIDY
+      DOUBLE PRECISION, INTENT(OUT) :: FRESDX,FRESDY
       INTEGER, DIMENSION(2*NX + 2*(NY-2)), INTENT(IN) :: BOUND
       INTEGER, DIMENSION(NX-2), INTENT(IN) :: UPBOUND, DOBOUND
       INTEGER, DIMENSION(NY-2), INTENT(IN) :: LEBOUND, RIBOUND
@@ -116,8 +126,10 @@
       UD = 1.D0
       VD = 1.D0
       IF(DEBUG) WRITE(*,*) 'CALLING CG SOLVER FOR DIFFUSION'
-      CALL CSC_CG(KM,DRHSX,UD,MNITERD,NTIDX,TOLCG,(NX-2)*(NY-2))
-      CALL CSC_CG(KM,DRHSY,VD,MNITERD,NTIDY,TOLCG,(NX-2)*(NY-2))
+!
+      CALL CSC_PCG(KM,DRHSX,UD,MNITERD,TOLCG,LUVD,DKM,PCD,NTIDX,FRESDX)
+      CALL CSC_PCG(KM,DRHSY,VD,MNITERD,TOLCG,LUVD,DKM,PCD,NTIDY,FRESDY)
+! 
       IF(DEBUG) WRITE(*,*) 'EXIT CG SOLVER FOR DIFFUSION'
       IF(DEBUG) WRITE(*,*) 'ITERATIONS, X, Y: ', NTIDX, NTIDY
 !
@@ -159,7 +171,3 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       END SUBROUTINE DIFFUSION
-
-
-
-

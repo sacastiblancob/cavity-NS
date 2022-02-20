@@ -71,7 +71,7 @@
 !  IN SUBROUTINE VARIABLES
 !
       DOUBLE PRECISION, DIMENSION(MA%NR+1,M+1) :: WH
-      DOUBLE PRECISION, DIMENSION(M) :: PBET
+      DOUBLE PRECISION, DIMENSION(M+1) :: PBET
       DOUBLE PRECISION, DIMENSION(M+1) :: VG
       DOUBLE PRECISION :: D,S,C,HIJ,HI1J
       DOUBLE PRECISION, DIMENSION(MA%NR) :: VZ,VQ,VR
@@ -103,6 +103,7 @@
 !
         !ARNOLDI METHOD WITH HOUSEHOLDER
         CALL CSC_ARNOLDIHOUSE(MA,VR,M,LUV,VD,PC,WH,PBET)
+        !IF(T.LE.8) WRITE(*,*) 'HS',WH(1:M+1,1:M+1)
 !
         !ELIMINATION PROCESS FOR HESSENBERG MATRIX (GIVEN'S ROTATIONS)
         VG(1) = WH(1,1)
@@ -127,7 +128,7 @@
         !BACKWARD SUBSTITUTION
         DO I=M,1,-1
           VG(I) = VG(I)/WH(I,I+1)
-          VG(1:I-1) = VG(1:I-1) - WH(1:1-1,I+1)*VG(I)
+          VG(1:I-1) = VG(1:I-1) - WH(1:I-1,I+1)*VG(I)
         ENDDO
 !
         !COMPUTING Z FOR X_M = X0 + Z
@@ -190,7 +191,7 @@
         !BACKWARD SUBSTITUTION
         DO I=M,1,-1
           VG(I) = VG(I)/WH(I,I+1)
-          VG(1:I-1) = VG(1:I-1) - WH(1:1-1,I+1)*VG(I)
+          VG(1:I-1) = VG(1:I-1) - WH(1:I-1,I+1)*VG(I)
         ENDDO
 !
         !COMPUTING Z FOR X_M = X0 + Z
@@ -256,7 +257,7 @@
         !BACKWARD SUBSTITUTION
         DO I=M,1,-1
           VG(I) = VG(I)/WH(I,I+1)
-          VG(1:I-1) = VG(1:I-1) - WH(1:1-1,I+1)*VG(I)
+          VG(1:I-1) = VG(1:I-1) - WH(1:I-1,I+1)*VG(I)
         ENDDO
 !
         !COMPUTING Z FOR X_M = X0 + Z
