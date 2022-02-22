@@ -120,7 +120,7 @@
       !COMPUTING V_J, BASED IN WH PREVIOUS RESULTS
       !V_J = P1*P2*...*PJ*ej ,i.e.,SUCCESIVE RIGHT OUTER PRODUCTS
         VV = 0.0D0
-        VQ = 0.0D0
+        VQ = VV
         VQ(J) = 1.0D0
         DO K=J,1,-1
           BQTW = VB(K)*(DOT_PRODUCT(VQ(K:N),WH(K+1:N+1,K)))
@@ -139,7 +139,7 @@
           DO I=K,N
             VZ(I) = VZAUX(I) - WH(I+1,K)*BZTW
           ENDDO
-          VZAUX = VV
+          VZAUX = VZ
         ENDDO
 !
       !COMPUTING NEW HOUSEHOLDER PROJECTOR VECTOR AND NEW BETA

@@ -1,4 +1,4 @@
-function [Pv,Pr,Pc,Qv,Qr,Qc] = csc_preSOR(Av,Ac,Ar,w)
+function [Pv,Pc,Pr,Qv,Qc,Qr] = csr_preSOR(Av,Ac,Ar,w)
 %
 % This function takes the matrix A in CSC storage, and prepares the
 % matrices for solve the system Ax=b with SOR iterative method
@@ -18,80 +18,78 @@ function [Pv,Pr,Pc,Qv,Qr,Qc] = csc_preSOR(Av,Ac,Ar,w)
 % For the particular case when w = 1, we are in Gauss-Seidel method
 %
 % Entries:
-%     Av, Ar, Ac : Components of matrix A in CSC stotage
+%     Av, Ar, Ac : Components of matrix A in CSR stotage
 %     w : SOR Over-Relaxation coefficient
 %
-%      Sergio A. Castiblanco B. - Métodos Numéricos Avanzados
-%      Pontificia Universidad Javeriana - Bogotá
-%
+%%%%%%%
 
-m = length(Ac)-1;
-nzp = m;
+n = length(Ar)-1;
+nzp = n;
 if w==1
     nzq = 0;
 else
-    nzq = m;
+    nzq = n;
 end
 
-for j=1:m
-    for i=Ac(j):Ac(j+1)-1
-        if Ar(i)<j
+for j=1:n
+    for i=Ar(j):Ar(j+1)-1
+        if Ac(i)<j
             nzq = nzq + 1;
-        elseif Ar(i)>j
+        elseif Ac(i)>j
             nzp = nzp + 1;
         end
     end
 end
 
-Qv = zeros(nzq,1);
-Qr = zeros(nzq,1);
-Qc = zeros(m+1,1);
-Qc(1) = 1;
-Pv = zeros(nzp,1);
-Pr = zeros(nzp,1);
-Pc = zeros(m+1,1);
-Pc(1) = 1;
+Qv = zeros(1,nzq);
+Qc = zeros(1,nzq);
+Qr = zeros(1,n+1);
+Qr(1) = 1;
+Pv = zeros(1,nzp);
+Pc = zeros(1,nzp);
+Pr = zeros(1,n+1);
+Pr(1) = 1;
     
 qp=1;
 pp=1;
 if w==1
-    for j=1:m
-        for i=Ac(j):Ac(j+1)-1
-            if Ar(i) < j
+    for j=1:n
+        for i=Ar(j):Ar(j+1)-1
+            if Ac(i) > j
                 Qv(qp) = -Av(i);
-                Qr(qp) = Ar(i);
+                Qc(qp) = Ac(i);
                 qp = qp + 1;
             else
                 Pv(pp) = Av(i);
-                Pr(pp) = Ar(i);
+                Pc(pp) = Ac(i);
                 pp = pp + 1;
             end
         end
-        Qc(j+1) = qp;
-        Pc(j+1) = pp;
+        Qr(j+1) = qp;
+        Pr(j+1) = pp;
     end
 else
-    for j=1:m
-        for i=Ac(j):Ac(j+1)-1
-            if Ar(i) < j
+    for j=1:n
+        for i=Ar(j):Ar(j+1)-1
+            if Ac(i) > j
                 Qv(qp) = -Av(i);
-                Qr(qp) = Ar(i);
+                Qc(qp) = Ac(i);
                 qp = qp + 1;
-            elseif Ar(i) > j
+            elseif Ac(i) < j
                 Pv(pp) = Av(i);
-                Pr(pp) = Ar(i);
+                Pc(pp) = Ac(i);
                 pp = pp + 1;
             else
                 Qv(qp) = (1/w - 1)*Av(i);
-                Qr(qp) = Ar(i);
+                Qc(qp) = Ac(i);
                 qp = qp + 1;
                 Pv(pp) = (1/w)*Av(i);
-                Pr(pp) = Ar(i);
+                Pc(pp) = Ac(i);
                 pp = pp + 1;
             end
         end
-        Qc(j+1) = qp;
-        Pc(j+1) = pp;
+        Qr(j+1) = qp;
+        Pr(j+1) = pp;
     end
 end
 

@@ -19,7 +19,7 @@
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
       USE CSC_STORAGE
-      USE DECLARATIONS_NUMERICAL, ONLY:NX,NY,DEBUG 
+      USE DECLARATIONS_NUMERICAL, ONLY:NX,NY,DEBUG,LMT 
       IMPLICIT NONE
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,6 +150,10 @@
       ! ! !WRITE(*,*) 'LR ', LM%R
       ! ! !WRITE(*,*) 'LC ', LM%C
       ! ! !WRITE(*,*) 'LNC,LNR,LNZ ', LM%NC,LM%NR,LM%NZ
+!
+! COMPUTING THE TRANSPOSE OF LAPLACIAN MATRIX
+!
+      CALL CSC_TRANS(LM,LMT,'LMT   ')
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !

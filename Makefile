@@ -59,10 +59,11 @@ SRCDIAA = $(SRCDIR)/csc_diaga.f
 SRCKRON = $(SRCDIR)/csc_kron.f
 SRCSUMC = $(SRCDIR)/csc_sum.f
 SRCTRAN = $(SRCDIR)/csc_trans.f
+SRCCSST = $(SRCDIR)/css_trans.f
 SRCPSOR = $(SRCDIR)/csc_presor.f
 SRCCMMV = $(SRCDIR)/csc_mmatvec.f
 SRCPCSO = $(SRCDIR)/csc_preconSSOR.f
-SRCPCIL = $(SRCDIR)/csc_preconilu0.f
+SRCPCIL = $(SRCDIR)/csr_preconilu0.f
 SRCSPLU = $(SRCDIR)/csc_solpacklu.f
 SRCHOUV = $(SRCDIR)/householderv.f
 SRCARHO = $(SRCDIR)/csc_arnoldihouse.f
@@ -98,10 +99,11 @@ OBJDIAA = $(OBJDIR)/csc_diaga.o
 OBJKRON = $(OBJDIR)/csc_kron.o
 OBJSUMC = $(OBJDIR)/csc_sum.o
 OBJTRAN = $(OBJDIR)/csc_trans.o
+OBJCSST = $(SRCDIR)/css_trans.o
 OBJPSOR = $(OBJDIR)/csc_presor.o
 OBJCMMV = $(OBJDIR)/csc_mmatvec.o
 OBJPCSO = $(OBJDIR)/csc_preconSSOR.o
-OBJPCIL = $(OBJDIR)/csc_preconilu0.o
+OBJPCIL = $(OBJDIR)/csr_preconilu0.o
 OBJSPLU = $(OBJDIR)/csc_solpacklu.o
 OBJHOUV = $(OBJDIR)/householderv.o
 OBJARHO = $(OBJDIR)/csc_arnoldihouse.o
@@ -123,7 +125,7 @@ OBJKILL = $(OBJDIR)/killemall.o
 #
 OBJECTS = $(OBJDCSC) $(OBJCSCS) $(OBJPHYS) $(OBJNUME) $(OBJWRHE) \
 			   	$(OBJPONS) $(OBJLECB) $(OBJALLC) $(OBJDIAG) $(OBJDIAA) \
-				 	$(OBJKRON) $(OBJSUMC) $(OBJTRAN) $(OBJPSOR) $(OBJCMMV) \
+				 	$(OBJKRON) $(OBJSUMC) $(OBJTRAN) $(OBJCSST) $(OBJPSOR) $(OBJCMMV) \
 					$(OBJPCSO) $(OBJPCIL) $(OBJSPLU) $(OBJHOUV) $(OBJARHO) \
 				 	$(OBJCCGS) $(OBJSORS) $(OBJPCGM) $(OBJBICG) $(OBJGMRE) \
 					$(OBJDIFF) $(OBJLAPL) $(OBJPREC) $(OBJPRER) $(OBJDIV2) \
@@ -189,6 +191,9 @@ $(OBJSUMC): $(SRCSUMC)
 
 $(OBJTRAN): $(SRCTRAN)
 	    $(FC) $(CFLAGS) $(SRCTRAN) -o $(OBJTRAN)
+
+$(OBJCSST): $(SRCCSST)
+	    $(FC) $(CFLAGS) $(SRCCSST) -o $(OBJCSST)
 
 $(OBJPSOR): $(SRCPSOR)
 	    $(FC) $(CFLAGS) $(SRCPSOR) -o $(OBJPSOR)

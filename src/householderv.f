@@ -46,7 +46,6 @@
 !
       DOUBLE PRECISION, DIMENSION(N) :: X
       DOUBLE PRECISION :: SIG, MU, NX
-      INTEGER :: I
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
@@ -59,11 +58,8 @@
       X = VX/NX
 !
       SIG = DOT_PRODUCT(X(2:N),X(2:N))
-      V = 0.D0
+      V = X
       V(1) = 1.D0
-      DO I=2,N
-        V(I)=X(I)
-      ENDDO
       IF(N.EQ.1)THEN
         BETA = 2
         V = 1.0D0
@@ -78,9 +74,7 @@
             V(1) = -SIG/(X(1)+MU)
           ENDIF
           BETA = (2*V(1)**2)/(SIG+V(1)**2)
-          DO I=1,N
-            V(I)=V(I)/V(1)
-          ENDDO
+          V = V/V(1)
         ENDIF
       ENDIF      
 !

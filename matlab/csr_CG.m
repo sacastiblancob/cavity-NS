@@ -1,4 +1,4 @@
-function [x,t] = csc_CG(Av,Ar,Ac,b,x,niter,tol,LUv,pc)
+function [x,t] = csr_CG(Av,Ac,Ar,b,x,niter,tol,LUv,pc)
 %
 %This function solves the system Ax=b with the Conjugate Gradient method
 %
@@ -9,7 +9,7 @@ function [x,t] = csc_CG(Av,Ar,Ac,b,x,niter,tol,LUv,pc)
 %     niter : Max. number of iterations
 %     tol : tolerance for the stop through the norm of the residual
 %     LUv  : values of LU decomposition matrix (for SSOR or ILU(0)) in
-%              CSC_packed storage, if not SSOR or ILU(0), it must be have
+%              CSR_packed storage, if not SSOR or ILU(0), it must be have
 %              arbitrary values.
 %     pc  : preconditioning type
 %       - 0 : No preconditioning
@@ -25,30 +25,30 @@ function [x,t] = csc_CG(Av,Ar,Ac,b,x,niter,tol,LUv,pc)
 %No preconditioning
 if pc==0
 
-r = b - csc_matvec(Av,Ar,Ac,x);
+r = b - csr_matvec(Av,Ac,Ar,x);
 p = r;
 for t = 1:niter
     rr = r'*r;
-    Ap = csc_matvec(Av,Ar,Ac,p);
+    Ap = csr_matvec(Av,Ac,Ar,p);
     a = rr/(Ap'*p);
     x = x + a*p;
     r = r - a*Ap;
     if norm(r)<tol
         break
     end
-    bet = (r'*r)/rr;
-    p = r + bet*p;
+    b = (r'*r)/rr;
+    p = r + b*p;
 end
 
 %Diagonal preconditioning
 elseif pc==1 || pc==2
 
-r = b - csc_matvec(Av,Ar,Ac,x);
-% D = csc_diaga(Av,Ar,Ac);
+r = b - csr_matvec(Av,Ac,Ar,x);
+% D = csr_diaga(Av,Ac,Ar);
 z = r./LUv;
 p = z;
 for t=1:niter
-    Ap = csc_matvec(Av,Ar,Ac,p);
+    Ap = csr_matvec(Av,Ac,Ar,p);
     rz = r'*z;
     a = (rz)/(Ap'*p);
     x = x + a*p;
@@ -57,18 +57,17 @@ for t=1:niter
         break
     end
     z = r./LUv;
-    bet = (r'*z)/(rz);
-    p = z + bet*p;
+    b = (r'*z)/(rz);
+    p = z + b*p;
 end
 
-%SSOR or ILU preconditioning
 elseif pc==3 || pc==4
 
-r = b - csc_matvec(Av,Ar,Ac,x);
-z = csc_solpacklu(LUv, Ar, Ac, r);
+r = b - csr_matvec(Av,Ac,Ar,x);
+z = csr_solpacklu(LUv, Ac, Ar, r);
 p = z;
 for t=1:niter
-    Ap = csc_matvec(Av,Ar,Ac,p);
+    Ap = csr_matvec(Av,Ac,Ar,p);
     rz = r'*z;
     a = (rz)/(Ap'*p);
     x = x + a*p;
@@ -76,9 +75,9 @@ for t=1:niter
     if norm(r)<tol
         break
     end
-    z = csc_solpacklu(LUv, Ar, Ac, r);
-    bet = (r'*z)/(rz);
-    p = z + bet*p;
+    z = csr_solpacklu(LUv, Ac, Ar, r);
+    b = (r'*z)/(rz);
+    p = z + b*p;
 end
 
 end

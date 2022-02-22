@@ -1,4 +1,5 @@
-clear; clc;
+% clear; clc;
+clear all
 %%
 %Solver Burgers 2D, with primitive variables scheme for the nonlinear
 %terms.
@@ -15,8 +16,8 @@ rho = 1000;         %Density of water, kg/m3 (ISU)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Number of nodes in each direction
-n = 9;                      %Number of nodes in X direction
-m = 9;                      %Number of nodes in Y direction
+n = 81;                      %Number of nodes in X direction
+m = 81;                      %Number of nodes in Y direction
 
 %Boundaries locations of the domain
 xmin = 0.0;       %Left boundary
@@ -29,7 +30,7 @@ ymax = 1.0;       %Right boundary
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Courant Number
-CFL = 1;                                    %CFL (nonlinear parameter)
+CFL = 0.95;                                    %CFL (nonlinear parameter)
 
 % Initial time
 to = 0;                                     %Initial time
@@ -200,23 +201,23 @@ else
     alp =-(2*((dy^2)/(dx^2)) + 2);
 end
 
-% % %
-% % % Computing matrix L for Poisson Equation with Kronecker products
-% % % Standard Matlab
-% % 
-% % L11 = spdiags(ones(m,1),0,m,m);
-% % h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
-% % h1(2,3) = alx*2;
-% % h1(n-1,1) = alx*2;
-% % L12 = spdiags(h1,[-1 0 1],n,n);
-% % h2 = ones(m,2);
-% % h2(2,2) = 2;
-% % h2(m-1,1) = 2;
-% % L21 = spdiags(h2,[-1 1],m,m);
-% % L22 = spdiags(aly*ones(n,1),0,n,n);
-% % L1 = kron(L11,L12);
-% % L2 = kron(L21,L22);
-% % L = L1 + L2;
+%
+% Computing matrix L for Poisson Equation with Kronecker products
+% Standard Matlab
+
+L11 = spdiags(ones(m,1),0,m,m);
+h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
+h1(2,3) = alx*2;
+h1(n-1,1) = alx*2;
+L12 = spdiags(h1,[-1 0 1],n,n);
+h2 = ones(m,2);
+h2(2,2) = 2;
+h2(m-1,1) = 2;
+L21 = spdiags(h2,[-1 1],m,m);
+L22 = spdiags(aly*ones(n,1),0,n,n);
+L1 = kron(L11,L12);
+L2 = kron(L21,L22);
+L = L1 + L2;
 % % %spy(L)
 
 %
@@ -245,7 +246,7 @@ d2 = [-1 1];
 % Computing minimum singular vector related of L' for regularization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % % WITH STANDARD MATLAB FUNCTION
-% % [UL1,SL1,VL1] = svds(L,1,'smallest');
+[UL1,SL1,VL1] = svds(L,1,'smallest');
 
 % % % WITH CSC
 
@@ -259,32 +260,50 @@ d2 = [-1 1];
 % A Note on the Regularization of the Discrete Poisson–Neumann Problem
 %
 
+% Right Hand Side Singular Vector
+VL = (1/sqrt(n*m))*ones(n*m,1);
+
 % Left hand side singular vector (used for regularization)
-UL = 0.5*ones(n*m,1);
+% UL0 = 0.5*ones(n*m,1);
+UL0 = -VL;
 b = zeros(n*m,1);
 nitersing = zeros(sing,1);
 % normi = zeros(sing,1);
+
+% LUs = zeros(length(Ltc)-1,1); pcs = 0;
+% LUs = csc_diaga(Ltv,Ltr,Ltc); pcs = 1;
+% LUs = abs(csc_diaga(Ltv,Ltr,Ltc)); pcs = 2;
+% wsing = 1; LUs = csc_preconSSOR(Ltv,Ltr,Ltc,wsing); pcs = 3;
+% % LUs = csc_preconILU0(Ltv,Ltr,Ltc); pcs = 4;
+[Bv,Bc,Br] = css_trans(Ltv,Ltr,Ltc); pcs = 4;
+[LUs] = csr_preconILU0(Bv,Bc,Br);
+LUs = css_trans(LUs,Bc,Br);
+
+
+r0as = b - csc_matvec(Ltv,Ltr,Ltc,UL0);
+r0as = csc_matvec(Ltv,Ltr,Ltc,r0as);
+kss = 8;
 for i=1:sing
-    [UL,pit] = csc_CG(Ltv,Ltr,Ltc,b,UL,mniterm,tolsing);
+%     [UL,pit] = csc_CG(Ltv,Ltr,Ltc,b,UL0,mniterm,tolsing,LUs,pcs);
+%     [UL,pit,ress] = csc_bicgstab(Ltv,Ltr,Ltc,b,UL0,r0as,mniterm,tolsing,LUs,pcs);
+    [UL,pit,ress] = csc_gmres(Ltv,Ltr,Ltc,b,UL0,kss,mniterm,tolsing,LUs,pcs);
+
     UL = UL./norm(UL);
     nitersing(i) = pit;
     % check performance again matlab standard solver
     %  normi(i) = norm((abs(UL)-abs(UL1)))
 end
-
-% Right Hand Side Singular Vector
-VL = (1/sqrt(n*m))*ones(n*m,1);
+pit
+ress
+norm(abs(UL)-abs(UL1))
 
 %Regularization matrix
-RM = (eye(n*m)-UL*UL');
+RM = (eye(n*m)-UL1*UL1');
 rhs = ones(n*m,1);
 rhs2 = RM*rhs;
 rhtu = rhs'*UL;
-% for i=1:n*m
-%     rhs(i) = rhs(i) - rhtu*UL(i);
-% end
 rhs = rhs - rhtu*UL;
-norm(rhs-rhs2)
+% norm(rhs-rhs2)
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
