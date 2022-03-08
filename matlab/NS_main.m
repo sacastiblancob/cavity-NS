@@ -1,5 +1,6 @@
 % clear; clc;
-clear all
+% clear all
+% tic
 %%
 %Solver Burgers 2D, with primitive variables scheme for the nonlinear
 %terms.
@@ -16,8 +17,8 @@ rho = 1000;         %Density of water, kg/m3 (ISU)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Number of nodes in each direction
-n = 81;                      %Number of nodes in X direction
-m = 81;                      %Number of nodes in Y direction
+n = 51;                      %Number of nodes in X direction
+m = 51;                      %Number of nodes in Y direction
 
 %Boundaries locations of the domain
 xmin = 0.0;       %Left boundary
@@ -51,12 +52,23 @@ tolcg = 1E-8;
 %Maximum number of iterations for CG solver (in difussion step)
 mniterd = 100;
 
-%
+%preconditioner
+pcg = 4;
+% 0 -> no preconditioning
+% 1 -> diagonal
+% 2 -> absolute diagonal
+% 3 -> SSOR
+% 4 -> ILU(0)
+
+%SSOR preconditioning coefficient
+wc = 1.2;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options for 'smallest' SVD solution
-%
+%%%%%%%%%%%%
 
 % Tolerance for finding minimum singular vector related
-tolsing = 1E-12;
+tolsing = 1E-14;
 
 %Number of iterations for inverse power method
 sing = 1;
@@ -65,15 +77,32 @@ sing = 1;
 % vector related
 mniterm = 1000;
 
-%
-% SOR Solver configuration for the laplacian
-%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Configuration Solver configuration for the laplacian
+%%%%%%%%%%
 
-% Over-Relaxation coefficient (w=1 for Gauss-Seidel)
-w = 13.4523570058092 * exp(-0.206450260650164 * (n*m).^-0.434163866503769) - 11.4497834449085;
+%Solver for Poisson Equation
+sp = 1;
+% 1 -> bicgstab
+% 2 -> gmres
+
+%preconditioner
+pcp = 3;
+% 0 -> no preconditioning
+% 1 -> diagonal
+% 2 -> absolute diagonal
+% 3 -> SSOR
+% 4 -> ILU(0)
+
+% Symmetric Over-Relaxation coefficient - preconditioner (w=1 for Gauss-Seidel)
+% w = 13.4523570058092 * exp(-0.206450260650164 * (n*m).^-0.434163866503769) - 11.4497834449085;
+wp = 1.2;
+
+%Krylov subspace size for gmres
+ksss = 8;
 
 %Tolerance for the residual of SOR
-tolsor = 1E-4;
+tolsor = 1E-6;
 
 %Maximum number of iterations for SOR solver (in Poisson step)
 mniters = 1000;
@@ -201,24 +230,24 @@ else
     alp =-(2*((dy^2)/(dx^2)) + 2);
 end
 
-%
-% Computing matrix L for Poisson Equation with Kronecker products
-% Standard Matlab
-
-L11 = spdiags(ones(m,1),0,m,m);
-h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
-h1(2,3) = alx*2;
-h1(n-1,1) = alx*2;
-L12 = spdiags(h1,[-1 0 1],n,n);
-h2 = ones(m,2);
-h2(2,2) = 2;
-h2(m-1,1) = 2;
-L21 = spdiags(h2,[-1 1],m,m);
-L22 = spdiags(aly*ones(n,1),0,n,n);
-L1 = kron(L11,L12);
-L2 = kron(L21,L22);
-L = L1 + L2;
-% % %spy(L)
+% % %
+% % % Computing matrix L for Poisson Equation with Kronecker products
+% % % Standard Matlab
+% 
+% L11 = spdiags(ones(m,1),0,m,m);
+% h1 = [alx*ones(n,1) alp*ones(n,1) alx*ones(n,1)];
+% h1(2,3) = alx*2;
+% h1(n-1,1) = alx*2;
+% L12 = spdiags(h1,[-1 0 1],n,n);
+% h2 = ones(m,2);
+% h2(2,2) = 2;
+% h2(m-1,1) = 2;
+% L21 = spdiags(h2,[-1 1],m,m);
+% L22 = spdiags(aly*ones(n,1),0,n,n);
+% L1 = kron(L11,L12);
+% L2 = kron(L21,L22);
+% L = L1 + L2;
+% % % %spy(L)
 
 %
 % Computing L through CSC storage
@@ -243,16 +272,43 @@ d2 = [-1 1];
 %csc_spy(Lv,Lr,Lc)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Computing preconditioners
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Poisson solver
+if pcp==1
+    LUp = csc_diaga(Lv,Lr,Lc);
+elseif pcp==2
+    LUp = abs(csc_diaga(Lv,Lr,Lc));
+elseif pcp==3
+    LUp = csc_preconSSOR(Lv,Lr,Lc,wp);
+elseif pcp==4
+    LUp = csc_preconILU0(Lv,Lr,Lc);
+else
+    LUp = 0;
+end
+
+%Diffusion Solver
+if pcg==1
+    LUc = csc_diaga(Kv,Kr,Kc);
+elseif pcg==2
+    LUc = abs(csc_diaga(Kv,Kr,Kc));
+elseif pcg==3
+    LUc = csc_preconSSOR(Kv,Kr,Kc,wc);
+elseif pcg==4
+    LUc = csc_preconILU0(Kv,Kr,Kc);
+else
+    LUc = 0;
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Computing minimum singular vector related of L' for regularization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % % WITH STANDARD MATLAB FUNCTION
-[UL1,SL1,VL1] = svds(L,1,'smallest');
+% [UL1,SL1,VL1] = svds(L,1,'smallest');
 
 % % % WITH CSC
-
-% Calling preSOR
-[Ltv,Ltr,Ltc] = csc_trans(Lv,Lr,Lc);
-[LPv,LPr,LPc,LQv,LQr,LQc] = csc_preSOR(Lv,Lr,Lc,w);
 
 %
 % Computing smallest related singular vector with inverse power method
@@ -263,239 +319,289 @@ d2 = [-1 1];
 % Right Hand Side Singular Vector
 VL = (1/sqrt(n*m))*ones(n*m,1);
 
-% Left hand side singular vector (used for regularization)
-% UL0 = 0.5*ones(n*m,1);
-UL0 = -VL;
-b = zeros(n*m,1);
-nitersing = zeros(sing,1);
-% normi = zeros(sing,1);
-
-% LUs = zeros(length(Ltc)-1,1); pcs = 0;
-% LUs = csc_diaga(Ltv,Ltr,Ltc); pcs = 1;
-% LUs = abs(csc_diaga(Ltv,Ltr,Ltc)); pcs = 2;
-% wsing = 1; LUs = csc_preconSSOR(Ltv,Ltr,Ltc,wsing); pcs = 3;
-% % LUs = csc_preconILU0(Ltv,Ltr,Ltc); pcs = 4;
-[Bv,Bc,Br] = css_trans(Ltv,Ltr,Ltc); pcs = 4;
-[LUs] = csr_preconILU0(Bv,Bc,Br);
-LUs = css_trans(LUs,Bc,Br);
-
-
-r0as = b - csc_matvec(Ltv,Ltr,Ltc,UL0);
-r0as = csc_matvec(Ltv,Ltr,Ltc,r0as);
-kss = 8;
-for i=1:sing
-%     [UL,pit] = csc_CG(Ltv,Ltr,Ltc,b,UL0,mniterm,tolsing,LUs,pcs);
+% % Left hand side singular vector (used for regularization)
+% % UL0 = 0.5*ones(n*m,1);
+% UL0 = -VL;
+% b = zeros(n*m,1);
+% nitersing = zeros(sing,1);
+% % normi = zeros(sing,1);
+% 
+% % Transposing L
+% [Ltv,Ltr,Ltc] = csc_trans(Lv,Lr,Lc);
+% 
+% % LUs = zeros(length(Ltc)-1,1); pcs = 0;
+% % LUs = csc_diaga(Ltv,Ltr,Ltc); pcs = 1;
+% % LUs = abs(csc_diaga(Ltv,Ltr,Ltc)); pcs = 2;
+% wsing = 1.2; LUs = csc_preconSSOR(Ltv,Ltr,Ltc,wsing); pcs = 3;
+% % % LUs = csc_preconILU0(Ltv,Ltr,Ltc); pcs = 4;
+% 
+% r0as = b - csc_matvec(Ltv,Ltr,Ltc,UL0);
+% r0as = csc_matvec(Ltv,Ltr,Ltc,r0as);
+% % r0as = ULg;
+% % kss = 8;
+% 
+% for i=1:sing
+% %     [UL,pit] = csc_CG(Ltv,Ltr,Ltc,b,UL0,mniterm,tolsing,LUs,pcs);
 %     [UL,pit,ress] = csc_bicgstab(Ltv,Ltr,Ltc,b,UL0,r0as,mniterm,tolsing,LUs,pcs);
-    [UL,pit,ress] = csc_gmres(Ltv,Ltr,Ltc,b,UL0,kss,mniterm,tolsing,LUs,pcs);
-
-    UL = UL./norm(UL);
-    nitersing(i) = pit;
-    % check performance again matlab standard solver
-    %  normi(i) = norm((abs(UL)-abs(UL1)))
-end
-pit
-ress
-norm(abs(UL)-abs(UL1))
-
-%Regularization matrix
-RM = (eye(n*m)-UL1*UL1');
-rhs = ones(n*m,1);
-rhs2 = RM*rhs;
-rhtu = rhs'*UL;
-rhs = rhs - rhtu*UL;
-% norm(rhs-rhs2)
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %         [UL,pit,ress] = csc_gmres(Ltv,Ltr,Ltc,b,UL0,kss,mniterm,tolsing,LUs,pcs);
 % 
-% %
-% % To store Angle not corrected (before Regularization)
-% %
-% angnc = zeros(length(t),1);
-% 
-% %
-% % To store Angle corrected (after Regularization)
-% %
-% angc = zeros(length(t),1);
-% 
-% %
-% % For storing SOR solver iterations taken
-% %
-% soriter = zeros(length(t),4);
-% 
-% j = 1;
-% 
-% %%
-% %Temporal loop
-% for time=t
-%     
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     % First fractional step (Non-lineal advection)
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     
-%     %Derivatives
-%     [dudx,dudy,dvdx,dvdy] = diver2D(Uo,Vo,dx,dy,n,m,bound,...
-%         upboundin,doboundin,leboundin,riboundin);
-%     
-%     %Resultado (Explicito)
-%     Up = Uo - dt*(Uo.*dudx + Vo.*dudy);
-%     Vp = Vo - dt*(Uo.*dvdx + Vo.*dvdy);
-%     
-% %     %Boundary conditions
-% %     Up(upbound) = 1.0;
-% %     Up(n*m) = 1.0;
-% %     Up(n*m-n+1) = 1.0;
-%     
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     %  Second fractional step (Poisson equation)
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     
-%     %Derivacion de U y V resultado del primer paso fraccionado en sus respectivas direcciones principales
-%     [dupdx,dvpdy] = grad2D(Up,Vp,dx,dy,n,m,upbound,dobound,lebound,ribound);
-%     
-%     %Vector de mano derecha sin regularizar
-%     if(dy>=dx)
-%         rhsp = ((dx^2)*rho/dt)*(dupdx + dvpdy);
-%     else
-%         rhsp = ((dy^2)*rho/dt)*(dupdx + dvpdy);
-%     end
-%         
-%     %Deviation angle (just for test)
-%     tetasr = acos(dot(rhsp,UL)*(1/(norm(rhsp)*norm(UL))));
-%     angnc(j)=tetasr;
-%     
-%     %
-%     %%% Regularizacion (Posrikidiz, 2001) %%%
-%     %
-%     
-%     % Regularized right hand side
-%     rhspr = RM*rhsp;
-%     
-%     % "Corrected angle" (just for test)
-% %     tetar = acos(dot(rhspr,UL)*(1/(norm(rhspr)*norm(UL))));
-%     tetar = dot(UL',rhspr);
-%     angc(j) = tetar;
-%         
-%     %%% Neumann Boundary Condition == 0 for Poisson Equation %%%
-%     %%% They are already included in matrix L structure
-%     %%% Since Neumann boundary condition == 0, there's nothing to do with
-%     %%% the right hand side (due to the use of central difference and ghost
-%     %%% nodes for taking into account Neumann boundary condition)
-%     
-%     %
-%     %%% Solving poisson equation %%%
-%     %
-%     
-%     % % % With Matlab Standard function
-%     % % P = L\rhspr;
-%     
-%     % With own csc_SOR solver
-%     if j==1
-%         P = zeros(n*m,1);
-%     end
-%     [P,nt] = csc_SOR(Lv,Lr,Lc,LPv,LPr,LPc,LQv,LQr,LQc,rhspr,P,mniters,tolsor);
-%     soriter(j,1) = nt;
-%     j=j+1;
-%     
-%     % Computing pressure gradient
-%     [dpdx,dpdy] = grad2D(P,P,dx,dy,n,m,upbound,dobound,lebound,ribound);
-%     Upp = Up - (dt/rho)*dpdx;
-%     Vpp = Vp - (dt/rho)*dpdy;
-% 
-%     % % % Checking SOR performance in reference to Matlab Standard solver
-%     % % [dpdx3,dpdy3] = grad2D(P3,P3,dx,dy,n,m,upbound,dobound,lebound,ribound);
-%     % % soriter(j,3) = norm(abs(dpdx-dpdx3));
-%     % % soriter(j,4) = norm(abs(dpdy-dpdy3));
-%     
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     %  Third fractional step
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     
-%     % Taking internal portion of Upp and Vpp (diffusion RHS) and settling
-%     % dirichlet boundary conditions in the RHS
-%     drhsx = zeros((n-2)*(m-2),1);
-%     drhsy = zeros((n-2)*(m-2),1);
-%     k=1;
-%     for i=1:n*m
-%         if ismember(i,bound)
-%             continue
-%         elseif (ismember(i,upboundin))
-%             drhsx(k) = Upp(i) - ay*1;
-%             drhsy(k) = Vpp(i);
-%             k = k + 1;
-%         else
-%             drhsx(k) = Upp(i);
-%             drhsy(k) = Vpp(i);
-%             k = k + 1;
-%         end
-%     end
-%     
-% %     % Solving diffusion step with Standard Matlab solver
-% %     Ud = K\drhsx;
-% %     Vd = K\drhsy;
-%     
-%     % Solving diffusion step with Conjugate Gradient CSC method
-%     [Ud,cgiu] = csc_CG(Kv,Kr,Kc,drhsx,drhsx,mniterd,tolcg);
-%     [Vd,cgiv] = csc_CG(Kv,Kr,Kc,drhsy,drhsy,mniterd,tolcg);
-%     
-%     % fprintf('cgiu = %.0f \ncgiv = %.0f \n',cgiu,cgiv);
-%         
-%     % Adding boundary conditions
-%     U = zeros(n*m,1);
-%     V = zeros(n*m,1);
-%     k = 1;
-%     for i=1:n*m
-%         if ismember(i,bound)
-%             if (ismember(i,upbound) || i==(n*m-n+1) || i==n*m)
-%                 U(i) = 1.0;
-%             end
-%         else
-%             U(i) = Ud(k);
-%             V(i) = Vd(k);
-%             k = k + 1;
-%         end
-%     end
-%     
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     % Updating Uo and Vo
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     Uo = U;
-%     Vo = V;
-%     
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     % Postprocessing and plot
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     
-%     Uplot = reshape(Uo,n,m);
-%     Uplot = Uplot';
-%     Uplot = Uplot(m:-1:1,:);
-%     Vplot = reshape(Vo,n,m);
-%     Vplot = Vplot';
-%     Vplot = Vplot(m:-1:1,:);
-%         
-%     % Plotting U velocity
-%     subplot(1,2,1)
-%     surf(X,Y,Uplot); 
-%     axis([xmin xmax ymin ymax -1 1]);
-%     view(0,90);
-% %     caxis([-0.4 1])
-%     shading interp
-%     colorbar
-%     drawnow
-%         
-%     % Plotting V velocity
-%     subplot(1,2,2)
-%     surf(X,Y,Vplot); 
-%     axis([xmin xmax ymin ymax -1 1]);
-%     view(0,90);
-% %     caxis([-0.4 0.1])
-%     shading interp
-%     colorbar
-%     drawnow
-%     
+%     UL = UL./norm(UL);
+%     nitersing(i) = pit;
+%     % check performance again matlab standard solver
+%     %  normi(i) = norm((abs(UL)-abs(UL1)))
 % end
-% % semilogy(t,normeu); axis([0 tf 1E-3 1E1]); grid on; hold on;
-% subplot(1,2,1); title('U'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
-% subplot(1,2,2); title('V'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
 
+%LHS singular vector for F.D. stencils used here
+UL = 4*ones(m*n,1);
+UL(bound) = 2;
+UL(1) = 1;
+UL(n) = 1;
+UL(n*m) = 1;
+UL(n*m-n+1)=1;
+UL = UL./norm(UL);
+
+% %Plotting singular vectors
+% kv = 1;
+% ULM = (reshape(ULg(:,kv),n,m))';
+% surf(X,Y,ULM); 
+% axis([xmin xmax ymin ymax min(ULg(:,kv)) max(ULg(:,kv))]);
+% view(0,90);
+% %     caxis([-0.4 1])
+% shading interp
+% colorbar
+% drawnow
+
+% %Lowest LHS singular vector
+% ULM = (reshape(UL1,n,m))';
+% surf(X,Y,ULM); 
+% axis([xmin xmax ymin ymax min(UL1) max(UL1)]);
+% view(0,90);
+% %     caxis([-0.4 1])
+% shading interp
+% colorbar
+% drawnow
+
+% IMPORTANT REMARK ABOUT LEFT HAND SIDE SINGULAR VECTOR
+% UL can be computed asigning 4 to internal nodes, 2 to top, left, right,
+% bottom boundary nodes, and 1 to four corners nodes, and then normalize
+% it!!!!!!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+% To store Angle not corrected (before Regularization)
+%
+angnc = zeros(length(t),1);
+
+%
+% To store Angle corrected (after Regularization)
+%
+angc = zeros(length(t),1);
+
+%
+% For storing SOR solver iterations taken
+%
+soriter = zeros(length(t),4);
+
+j = 1;
+
+%Initial P
+P = ones(n*m,1);
+P(upbound) = -1;
+
+%%
+%Temporal loop
+for time=t
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % First fractional step (Non-lineal advection)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %Derivatives
+    [dudx,dudy,dvdx,dvdy] = diver2D(Uo,Vo,dx,dy,n,m,bound,...
+        upboundin,doboundin,leboundin,riboundin);
+    
+    %Resultado (Explicito)
+    Up = Uo - dt*(Uo.*dudx + Vo.*dudy);
+    Vp = Vo - dt*(Uo.*dvdx + Vo.*dvdy);
+    
+%     %Boundary conditions
+%     Up(upbound) = 1.0;
+%     Up(n*m) = 1.0;
+%     Up(n*m-n+1) = 1.0;
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %  Second fractional step (Poisson equation)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %Derivacion de U y V resultado del primer paso fraccionado en sus respectivas direcciones principales
+    [dupdx,dvpdy] = grad2D(Up,Vp,dx,dy,n,m,upbound,dobound,lebound,ribound);
+    
+    %Vector de mano derecha sin regularizar
+    if(dy>=dx)
+        rhsp = ((dx^2)*rho/dt)*(dupdx + dvpdy);
+    else
+        rhsp = ((dy^2)*rho/dt)*(dupdx + dvpdy);
+    end
+        
+    %Deviation angle (just for test)
+    tetasr = acos(dot(rhsp,UL)*(1/(norm(rhsp)*norm(UL))));
+    angnc(j)=tetasr;
+    
+    %
+    %%% Regularizacion (Posrikidiz, 2001) %%%
+    %
+    
+    % Regularized right hand side
+%     rhspr = RM*rhsp;
+%     if j<2
+        rhtu = rhsp'*UL;
+        rhspr = rhsp - rhtu*UL;
+%     else
+%         rhspr = rhsp;
+%     end
+    
+    % "Corrected angle" (just for test)
+%     tetar = acos(dot(rhspr,UL)*(1/(norm(rhspr)*norm(UL))));
+    tetar = dot(UL',rhspr);
+    angc(j) = tetar;
+        
+    %%% Neumann Boundary Condition == 0 for Poisson Equation %%%
+    %%% They are already included in matrix L structure
+    %%% Since Neumann boundary condition == 0, there's nothing to do with
+    %%% the right hand side (due to the use of central difference and ghost
+    %%% nodes for taking into account Neumann boundary condition)
+    
+    %
+    %%% Solving poisson equation %%%
+    %
+    
+    % % % With Matlab Standard function
+    % % P = L\rhspr;
+    
+    % With own solver
+%     [P,nt] = csc_SOR(Lv,Lr,Lc,LPv,LPr,LPc,LQv,LQr,LQc,rhspr,P,mniters,tolsor);
+    if sp==1
+        r0p = rhspr - csc_matvec(Lv,Lr,Lc,P);
+        r0p = csc_matvec(Lv,Lr,Lc,r0p);
+        [P,nt,resl] = csc_bicgstab(Lv,Lr,Lc,rhspr,P,r0p,mniters,tolsor,LUp,pcp);
+    elseif sp==2
+        [P,nt,resl] = csc_gmres(Lv,Lr,Lc,rhspr,P,ksss,mniters,tolsor,LUp,pcp);
+    else
+        break
+    end
+    if mod(j,round(T/10))==0
+        fprintf('Nit_p = %.0f \t',nt)
+        fprintf('Res_p = %.8f \n',resl)
+    end
+    soriter(j,1) = nt;
+    j=j+1;
+    
+    % Computing pressure gradient
+    [dpdx,dpdy] = grad2D(P,P,dx,dy,n,m,upbound,dobound,lebound,ribound);
+    Upp = Up - (dt/rho)*dpdx;
+    Vpp = Vp - (dt/rho)*dpdy;
+
+    % % % Checking SOR performance in reference to Matlab Standard solver
+    % % [dpdx3,dpdy3] = grad2D(P3,P3,dx,dy,n,m,upbound,dobound,lebound,ribound);
+    % % soriter(j,3) = norm(abs(dpdx-dpdx3));
+    % % soriter(j,4) = norm(abs(dpdy-dpdy3));
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %  Third fractional step
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % Taking internal portion of Upp and Vpp (diffusion RHS) and settling
+    % dirichlet boundary conditions in the RHS
+    drhsx = zeros((n-2)*(m-2),1);
+    drhsy = zeros((n-2)*(m-2),1);
+    k=1;
+    for i=1:n*m
+        if ismember(i,bound)
+            continue
+        elseif (ismember(i,upboundin))
+            drhsx(k) = Upp(i) - ay*1;
+            drhsy(k) = Vpp(i);
+            k = k + 1;
+        else
+            drhsx(k) = Upp(i);
+            drhsy(k) = Vpp(i);
+            k = k + 1;
+        end
+    end
+    
+%     % Solving diffusion step with Standard Matlab solver
+%     Ud = K\drhsx;
+%     Vd = K\drhsy;
+    
+    % Solving diffusion step with Conjugate Gradient CSC method
+    [Ud,cgiu] = csc_CG(Kv,Kr,Kc,drhsx,drhsx,mniterd,tolcg,LUc,pcg);
+    [Vd,cgiv] = csc_CG(Kv,Kr,Kc,drhsy,drhsy,mniterd,tolcg,LUc,pcg);
+    if mod(j,round(T/10))==0
+        fprintf('Nit_cx = %.0f \t',cgiu)
+        fprintf('Nit_cy = %.0f \n',cgiv)
+    end
+    % fprintf('cgiu = %.0f \ncgiv = %.0f \n',cgiu,cgiv);
+        
+    % Adding boundary conditions
+    U = zeros(n*m,1);
+    V = zeros(n*m,1);
+    k = 1;
+    for i=1:n*m
+        if ismember(i,bound)
+            if (ismember(i,upbound) || i==(n*m-n+1) || i==n*m)
+                U(i) = 1.0;
+            end
+        else
+            U(i) = Ud(k);
+            V(i) = Vd(k);
+            k = k + 1;
+        end
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Updating Uo and Vo
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Uo = U;
+    Vo = V;
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Postprocessing and plot
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    Uplot = reshape(Uo,n,m);
+    Uplot = Uplot';
+    Uplot = Uplot(m:-1:1,:);
+    Vplot = reshape(Vo,n,m);
+    Vplot = Vplot';
+    Vplot = Vplot(m:-1:1,:);
+        
+    % Plotting U velocity
+    subplot(1,2,1)
+    surf(X,Y,Uplot); 
+    axis([xmin xmax ymin ymax -1 1]);
+    view(0,90);
+%     caxis([-0.4 1])
+    shading interp
+    axis equal
+    colorbar
+    drawnow
+        
+    % Plotting V velocity
+    subplot(1,2,2)
+    surf(X,Y,Vplot); 
+    axis([xmin xmax ymin ymax -1 1]);
+    view(0,90);
+%     caxis([-0.4 0.1])
+    shading interp
+    axis equal
+    colorbar
+    drawnow
+    
+end
+% semilogy(t,normeu); axis([0 tf 1E-3 1E1]); grid on; hold on;
+subplot(1,2,1); title('U'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
+subplot(1,2,2); title('V'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
+% toc
 
 
