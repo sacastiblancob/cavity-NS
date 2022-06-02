@@ -10,7 +10,7 @@
 % Physical paramters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % nu = 0.0000392;          %Kinematic viscosity (ISU)
-nu = 0.0003;
+nu = 0.00045;
 rho = 1000;         %Density of water, kg/m3 (ISU)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -18,14 +18,14 @@ rho = 1000;         %Density of water, kg/m3 (ISU)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Number of nodes in each direction
-n = 281;                      %Number of nodes in X direction
-m = 79;                      %Number of nodes in Y direction
+n = 251;                      %Number of nodes in X direction
+m = 91;                      %Number of nodes in Y direction
 
 %Boundaries locations of the domain
 xmin = 0.0;       %Left boundary
-ymin = -0.2;       %Bottom boundary
+ymin = -0.4;       %Bottom boundary
 xmax = 5.0;       %Top boundary
-ymax = 1.2;       %Right boundary
+ymax = 1.4;       %Right boundary
 
 %Coordinates of location of flat plate
 xp = 0.8;
@@ -56,7 +56,7 @@ CFL = 0.25;                                    %CFL (nonlinear parameter)
 to = 0;                                     %Initial time
 
 % Final time
-tf = 40;                                  %Final time
+tf = 10;                                  %Final time
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Solver Parameters
@@ -135,6 +135,25 @@ tolsor = 1E-8;
 mniters = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Initial condition for velocity
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Uo = zeros(m*n,1);
+% Uo(lebound) = dirl;
+% % Uo(ribound) = dirr;
+% Vo = zeros(m*n,1);
+% % Initial P
+P = ones(n*m,1);
+P(1:100) = -1;
+% load Initial_condition_2_281_79_Re300.mat
+% Uo = MU(:,end);
+% Vo = MV(:,end);
+% P = MP(:,end);
+load Initial_condition_40_251_91_Re200.mat
+% load Initial_condition_24.2_281_79.mat
+% load Initial_condition_hot41_281_79_Re300.mat
+% load Initial_condition_hot2_251_71_Re90.mat
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Computing Space Parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -148,6 +167,10 @@ Y = kron(y,ones(1,n));
 X = reshape(X,n,m)';
 Y = reshape(Y,n,m)';
 Y = Y(m:-1:1,:);
+% XD = X;
+% YD = Y;
+% XYD = zeros(m,n);
+% YXD = zeros(m,n);
 pos = 1:n*m;
 Mpos = zeros(m,n);
 Mpos(m,:) = 1:n;
@@ -188,22 +211,10 @@ dboundr = ribound;
 dbound = bound;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Initial condition for velocity
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Uo = zeros(m*n,1);
-% Uo(lebound) = dirl;
-% % Uo(ribound) = dirr;
-% Vo = zeros(m*n,1);
-%Initial P
-% P = ones(n*m,1);
-% P(upbound) = -1;
-load Initial_condition_2_281_79_Re300.mat
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Temporal parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dt = (min(dx,dy)*CFL/(max(abs(Uo))));    %Size of the time step
-T = round((tf-to)/dt);                      %Number of time steps
+T = 10*round((tf-to)/(10*dt));                      %Number of time steps
 t = to+dt:dt:(T*dt)+to;                        %Computational time
 
 %Reynolds Number
@@ -524,20 +535,120 @@ angc = zeros(length(t),1);
 %
 soriter = zeros(length(t),4);
 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % GLOBAL DG MESH
+% 
+% %Number of number of subdomains in X and Y
+% Nxg = 40;
+% Nyg = 12;
+% 
+% %Lengths-of-elements vectors (here all have same length)
+% LXG = ((xmax-xmin)/Nxg)*ones(1,Nxg);
+% LYG = ((ymax-ymin)/Nyg)*ones(Nyg,1);
+% 
+% %Jacobians
+% JX = 1./LXG;
+% JY = 1./LYG;
+% 
+% %Local polynomial orders (all elements will have same discretization)
+% Nx = 12;
+% Ny = 12;
+% 
+% %Local-master element coordinates
+% ep = (0.5 + 0.5*JacobiGL(0,0,Nx))';
+% et = (0.5 + 0.5*JacobiGL(0,0,Ny));
+% 
+% % Derivative matrices
+% XDD = dmatrix(ep,Nx);
+% YDD = dmatrix(et,Ny);
+% 
+% %Coordinates of X-direction element boundaries
+% XBH = zeros(1,Nx*Nxg+1);
+% 
+% %Coordinates of Y-direction element boundaries
+% YBV = zeros(Ny*Nyg+1,1);
+% 
+% for i=1:Nxg
+%     XBH((i-1)*Nx+1:i*Nx+1) = LXG(i)*ep + (xmin + sum(LXG(1:i-1)));
+% end
+% for i=1:Nyg
+%     YBV((i-1)*Ny+1:i*Ny+1) = LYG(i)*et + (ymin + sum(LYG(1:i-1)));
+% end
+% 
+% %Global grid
+% [XG,YG] = meshgrid(XBH,YBV);
+% % XG1 = XG; YG1 = YG;
+% % XG2 = XG; YG2 = YG;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FOR STORAGE OF RESULTS
+
 j = 1;
 
-MU = zeros(n*m,T+1);
-MV = zeros(n*m,T+1);
-MP = zeros(n*m,T+1);
+MU = zeros(n*m,round(T/10)+1);
+MV = zeros(n*m,round(T/10)+1);
+MP = zeros(n*m,round(T/10)+1);
 MU(:,1) = Uo;
 MV(:,1) = Vo;
 MP(:,1) = P;
 tt = 2;
+hh=2;
+
+sizeg = size(XG1);
+MFTLEf = zeros(sizeg(1)*sizeg(2),round(T/10)+1);
+MFTLEb = zeros(sizeg(1)*sizeg(2),round(T/10)+1);
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Computing FTLE fields for the initial condition
+% 
+% %CFL, NT
+% CFLftle = 3;
+% maxvel = max(max(abs(Uo),abs(Vo)));
+% dtftle = CFLftle*(min(dx,dy)/maxvel);
+% NTf = 35;
+% 
+% %Velocities for interpolation
+% UI = reshape(Uo,n,m);
+% UI = UI';
+% UI = UI(m:-1:1,:);
+% VI = reshape(Vo,n,m);
+% VI = VI';
+% VI = VI(m:-1:1,:);
+% 
+% UI =[UI(:,1) UI zeros(m,1)];
+% VI =[zeros(m,1) VI zeros(m,1)];
+% XI =[(xmin-2)*ones(m,1) X (xmax+2)*ones(m,1)];
+% YI =[Y(:,1) Y Y(:,1)];
+% 
+% for j=1:Nyg
+%     for i=1:Nxg
+%         XDGgt0 = XG((j-1)*Ny+1:j*Ny+1,(i-1)*Nx+1:i*Nx+1);
+%         YDGgt0 = YG((j-1)*Ny+1:j*Ny+1,(i-1)*Nx+1:i*Nx+1);
+%         
+%         % FTLE-forward
+%         Jx = JX(i);
+%         Jy = JY(j);
+%         [FTLEf] = ...
+%             FTLE_dgelem_f(XI,YI,UI,VI,XDGgt0,YDGgt0,dt,NT,Nx,Ny,Jx,Jy,XDD,YDD);
+% 
+%         %Storing results
+%         MFTLEf(:,1) = reshape(FTLEf,[],1);
+% 
+%         % FTLE-backward
+%         [FTLEb] = ...
+%             FTLE_dgelem_f(XI,YI,-UI,-VI,XDGgt0,YDGgt0,dt,NT,Nx,Ny,Jx,Jy,XDD,YDD);
+%         
+%         %Storing results
+%         MFTLEb(:,1) = reshape(FTLEb,[],1);
+% 
+%     end
+% end
 
 %%
 %Temporal loop
 for time=t
-    
+     
+    time
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % First fractional step (Non-lineal advection)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -729,54 +840,146 @@ for time=t
     Uo = U;
     Vo = V;
 
-    MU(:,tt) = Uo;
-    MV(:,tt) = Vo;
-    MP(:,tt) = P;
-    tt = tt+1;
-    
+    if mod(tt,10)==0
+        MU(:,hh) = Uo;
+        MV(:,hh) = Vo;
+        MP(:,hh) = P;
+%         hh = hh+1;
+    end
+        
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Postprocessing and plot
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-%     Uplot = reshape(Uo,n,m);
-%     Uplot = Uplot';
-%     Uplot = Uplot(m:-1:1,:);
-%     Vplot = reshape(Vo,n,m);
-%     Vplot = Vplot';
-%     Vplot = Vplot(m:-1:1,:);
-%     Pplot = reshape(P-P(n),n,m);
-%     Pplot = Pplot';
-%     Pplot = Pplot(m:-1:1,:);
-%         
+    Uplot = reshape(Uo,n,m);
+    Uplot = Uplot';
+    Uplot = Uplot(m:-1:1,:);
+    Vplot = reshape(Vo,n,m);
+    Vplot = Vplot';
+    Vplot = Vplot(m:-1:1,:);
+    Pplot = reshape(P-P(n),n,m);
+    Pplot = Pplot';
+    Pplot = Pplot(m:-1:1,:);
+
+%     %Computing LCS - DG
+%     if mod(tt,10)==0
+% 
+% %     %CFL, NT
+% %     CFLftle = 3;
+% %     maxvel = max(max(abs(Uo),abs(Vo)));
+% %     dtftle = CFLftle*(min(dx,dy)/maxvel);
+% 
+%     %Velocities for interpolation
+%     UI =[Uplot(:,1) Uplot zeros(m,1)];
+%     VI =[zeros(m,1) Vplot zeros(m,1)];
+% 
+%     for j=1:Nyg
+%         for i=1:Nxg
+%             XDGgt0 = XG((j-1)*Ny+1:j*Ny+1,(i-1)*Nx+1:i*Nx+1);
+%             YDGgt0 = YG((j-1)*Ny+1:j*Ny+1,(i-1)*Nx+1:i*Nx+1);
+%             
+%             % FTLE-forward
+%             Jx = JX(i);
+%             Jy = JY(j);
+%             [FTLEf] = ...
+%                 FTLE_dgelem_f(XI,YI,UI,VI,XDGgt0,YDGgt0,dtftle,NTf,Nx,Ny,Jx,Jy,XDD,YDD);
+%     
+%             %Storing results
+%             MFTLEf(:,1) = reshape(FTLEf,[],1);
+%     
+%             % FTLE-backward
+%             [FTLEb] = ...
+%                 FTLE_dgelem_f(XI,YI,-UI,-VI,XDGgt0,YDGgt0,dtftle,NTf,Nx,Ny,Jx,Jy,XDD,YDD);
+%             
+%             %Storing results
+%             MFTLEb(:,1) = reshape(FTLEb,[],1);
+%     
+%         end
+%     end
+%     hh = hh+1;
+%     end
+    tt = tt+1;
+    
+%     figure(1)
+%     
+%     % Streamfunction    
+% %     subplot(2,1,1);
+% %     streamslice(X,Y,[],Uplot,Vplot,[],[],[],[],5)
+% %     axis equal
+% %     title('Streamfunction')
+% %     hold off
+% %     drawnow
+% 
+%     % Plotting ACCUMULATION MAP
+%     subplot(2,1,2);
+%     surf(X,Y,AC);
+% %     hold on
+% %     streamslice(X,Y,Uplot,Vplot,'k');
+% %     axis([xmin xmax ymin ymax -1 10]);
+%     view(0,90);
+% %     caxis([0 3.5])
+% %     colormap(ax2,jet)
+%     shading interp
+%     axis equal
+%     colorbar
+%     title('Accumulation Backward ~ILE'); xlabel('X'); ylabel('Y');
+%     drawnow
+% % %     hold off
+% 
+%     % Plotting LCS
+%     subplot(2,1,1);
+%     surf(X,Y,real(XD));
+% %     hold on
+% %     streamslice(X,Y,Uplot,Vplot,'k');
+% %     axis([xmin xmax ymin ymax -1 10]);
+%     view(0,90);
+% %     caxis([0 3.5])
+% %     colormap(ax2,jet)
+%     shading interp
+%     axis equal
+%     colorbar
+%     title('Backward ~ILE'); xlabel('X'); ylabel('Y');
+%     drawnow
+% % %     hold off
+%     
+%     figure(2)
 %     % Plotting U velocity
 %     ax1 = subplot(3,1,1);
-%     surf(X,Y,Uplot); 
+%     surf(X,Y,Uplot);
+% %     hold on
+% %     streamslice(X,Y,Uplot,Vplot,'k');
 %     axis([xmin xmax ymin ymax -1 1.2]);
 %     view(0,90);
-% %     caxis([-0.4 1])
+%     caxis([-0.4 0.8])
 %     colormap(ax1,jet)
 %     shading interp
 %     axis equal
 %     colorbar
 %     title(strcat('U, Flat Plate of ',string(lp),', Re=',string(round(Re)),', Time =',string(round(time,1)))); xlabel('X'); ylabel('Y');
 %     drawnow
+% %     hold off
 %         
 %     % Plotting V velocity
 %     ax2 = subplot(3,1,2);
-%     surf(X,Y,Vplot); 
+%     surf(X,Y,Vplot);
+% %     hold on
+% %     streamslice(X,Y,Uplot,Vplot,'k');
 %     axis([xmin xmax ymin ymax -1 1]);
 %     view(0,90);
-% %     caxis([-0.4 0.1])
+%     caxis([-0.4 0.4])
 %     colormap(ax2,jet)
 %     shading interp
 %     axis equal
 %     colorbar
 %     title('V'); xlabel('X'); ylabel('Y');
 %     drawnow
+% %     hold off
 %     
 %     % Plotting pressure
 %     ax3 = subplot(3,1,3);
-%     surf(X,Y,Pplot); 
+%     surf(X,Y,Pplot);
+% %     hold on
+% %     streamslice(X,Y,Uplot,Vplot,'k');
 %     axis([xmin xmax ymin ymax -1000 1000]);
 %     view(0,90);
 % %     caxis([-0.4 0.1])
@@ -786,11 +989,12 @@ for time=t
 %     colorbar
 %     title('P'); xlabel('X'); ylabel('Y');
 %     drawnow
+% %     hold off
     
 end
 % semilogy(t,normeu); axis([0 tf 1E-3 1E1]); grid on; hold on;
 % subplot(2,1,1); title('U'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
 % subplot(2,1,2); title('V'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
 % toc
-
+% save('field_results_41-101_281_79_Re300.mat','MU','MV','MP','dt','dx','dy','lp','n','m','Re','T','X','Y','xmax','xmin','ymax','ymin')
 

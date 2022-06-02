@@ -575,33 +575,47 @@ for time=t
     Vplot = reshape(Vo,n,m);
     Vplot = Vplot';
     Vplot = Vplot(m:-1:1,:);
-        
+    
+    % Computing streamfunction
+    intUdy = flipud(dy*cumtrapz(flipud(Uplot)));
+    intVdx = (dx*cumtrapz(Vplot'))';
+%     S = intUdy - intVdx + 100;
+    S = intUdy;
+    
     % Plotting U velocity
     subplot(1,2,1)
-    surf(X,Y,Uplot); 
-    axis([xmin xmax ymin ymax -1 1]);
+    surf(X,Y,Uplot);
+%     hold on
+    contour(X,Y,S,'black');
+%     axis([xmin xmax ymin ymax -1 1]);
     view(0,90);
-%     caxis([-0.4 1])
+    caxis([-0.4 1])
     shading interp
     axis equal
     colorbar
     drawnow
+    hold off
         
     % Plotting V velocity
     subplot(1,2,2)
-    surf(X,Y,Vplot); 
-    axis([xmin xmax ymin ymax -1 1]);
+    surf(X,Y,Vplot);
+%     hold on
+    contour(X,Y,S,'black');
+%     axis([xmin xmax ymin ymax -1 1]);
     view(0,90);
-%     caxis([-0.4 0.1])
+    caxis([-0.4 0.1])
     shading interp
     axis equal
     colorbar
     drawnow
+    hold off
+
+%     streamslice(X,Y,Uplot,Vplot);
     
 end
-% semilogy(t,normeu); axis([0 tf 1E-3 1E1]); grid on; hold on;
-subplot(1,2,1); title('U'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
-subplot(1,2,2); title('V'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
-% toc
+% % semilogy(t,normeu); axis([0 tf 1E-3 1E1]); grid on; hold on;
+% subplot(1,2,1); title('U'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
+% subplot(1,2,2); title('V'); xlabel('X'); ylabel('Y'); colorbar; shading interp;
+% % toc
 
 
